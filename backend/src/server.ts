@@ -80,7 +80,7 @@ app.use(errorHandler);
 
 async function start(): Promise<void> {
   await connectDB();
-  const server = app.listen(PORT, () => {
+  const server = app.listen(PORT as number, "0.0.0.0", () => {
     // eslint-disable-next-line no-console
     console.log(`[server] secureflow backend listening on port ${PORT}`);
   });
