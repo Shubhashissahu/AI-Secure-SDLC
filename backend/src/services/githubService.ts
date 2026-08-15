@@ -1,4 +1,5 @@
 import axios, { AxiosInstance } from "axios";
+import { gzipSync } from "zlib";
 
 export interface GitHubPullRequest {
   number: number;
@@ -128,7 +129,10 @@ export class GitHubService {
     sarifContent: string
   ): Promise<void> {
     try {
-      const zippedBuffer = Buffer.from(sarifContent).toString("base64");
+      // FIX #3: GitHub Code Scanning API requires gzip-compressed SARIF,
+      // then base64-encoded. Previously only base64 was applied (no gzip).
+      const gzipped = gzipSync(Buffer.from(sarifContent, "utf-8"));
+      const zippedBuffer = gzipped.toString("base64");
       await this.client.post(`/repos/${owner}/${repo}/code-scanning/sarifs`, {
         commit_sha: commitSha,
         ref,

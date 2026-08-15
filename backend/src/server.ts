@@ -5,9 +5,10 @@ import helmet from "helmet";
 import morgan from "morgan";
 
 import { connectDB } from "./config/db";
+import { validateEnv } from "./config/env";
 import { errorHandler } from "./middleware/errorHandler";
 import { requireAuth } from "./middleware/authMiddleware";
-import { apiLimiter } from "./middleware/rateLimiter";
+import { apiLimiter, authLimiter, scanExecutionLimiter } from "./middleware/rateLimiter";
 import authRoutes from "./routes/authRoutes";
 import scanRoutes from "./routes/scanRoutes";
 import findingRoutes from "./routes/findingRoutes";
@@ -16,6 +17,9 @@ import dashboardRoutes from "./routes/dashboardRoutes";
 import webhookRoutes from "./routes/webhookRoutes";
 
 dotenv.config();
+
+// FIX #14: Validate env schema at startup — fails fast if required vars are missing
+validateEnv();
 
 const app = express();
 const PORT = process.env.PORT || 4000;
@@ -57,10 +61,10 @@ app.get("/health", (_req: Request, res: Response) => {
 });
 
 // ---- API routes ----
-// /api/auth is intentionally the one unauthenticated route group — you
-// can't require a token to obtain a token.
-app.use("/api/auth", authRoutes);
-app.use("/api/scans", requireAuth, scanRoutes);
+// FIX #4: authLimiter applied to /api/auth to prevent brute-force attacks.
+// scanExecutionLimiter applied to /api/scans to prevent scan spam/abuse.
+app.use("/api/auth", authLimiter, authRoutes);
+app.use("/api/scans", requireAuth, scanExecutionLimiter, scanRoutes);
 app.use("/api/findings", requireAuth, findingRoutes);
 app.use("/api/repositories", requireAuth, repositoryRoutes);
 app.use("/api/dashboard", requireAuth, dashboardRoutes);

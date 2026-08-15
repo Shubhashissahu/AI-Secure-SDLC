@@ -19,7 +19,6 @@ function Scans() {
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [error, setError] = useState("");
-  const isFetchingRef = useRef(false);
   const scansRef = useRef(scans);
   scansRef.current = scans;
 
@@ -37,9 +36,6 @@ function Scans() {
   }, []);
 
   const loadScans = useCallback((signal) => {
-    if (isFetchingRef.current) return Promise.resolve();
-    isFetchingRef.current = true;
-
     const params = selectedRepo ? { repositoryId: selectedRepo } : {};
     return api
       .get("/api/scans", { params, signal })
@@ -50,9 +46,6 @@ function Scans() {
       .catch((err) => {
         if (err.name === "CanceledError" || err.code === "ERR_CANCELED") return;
         setError("Failed to load scans. Click Retry to reload.");
-      })
-      .finally(() => {
-        isFetchingRef.current = false;
       });
   }, [selectedRepo]);
 

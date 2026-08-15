@@ -9,7 +9,6 @@ function SecurityScoreGauge({ score = 0, size = 180 }) {
   const animRef = useRef(null);
 
   useEffect(() => {
-    let start = 0;
     const duration = 1200;
     const startTime = performance.now();
 

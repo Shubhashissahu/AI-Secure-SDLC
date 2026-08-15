@@ -123,7 +123,7 @@ function Findings() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [showModal, setShowModal] = useState(false);
-  const [ollamaStatus, setOllamaStatus] = useState(null);
+  const [, setOllamaStatus] = useState(null);
 
   const [filters, setFilters] = useState({
     search: "",

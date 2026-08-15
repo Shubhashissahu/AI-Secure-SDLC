@@ -57,6 +57,11 @@ services:
       OLLAMA_MODEL: ${OLLAMA_MODEL:-codellama:13b}
       RATE_LIMIT_WINDOW_MS: ${RATE_LIMIT_WINDOW_MS:-900000}
       RATE_LIMIT_MAX: ${RATE_LIMIT_MAX:-100}
+      # FIX #24: Critical secrets must be supplied via .env — server will fail fast if missing
+      JWT_SECRET: ${JWT_SECRET}
+      AI_API_KEY: ${AI_API_KEY:-}
+      AI_PROVIDER: ${AI_PROVIDER:-local}
+      DISABLE_AUTH: ${DISABLE_AUTH:-false}
     volumes:
       - ./backend/src:/app/src
       - /app/node_modules

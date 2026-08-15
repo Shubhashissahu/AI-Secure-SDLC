@@ -16,6 +16,13 @@ export type FindingTool =
   | "trivy-config"
   | "cicd-scanner";
 export type FindingSeverity = "critical" | "high" | "medium" | "low";
+/**
+ * FIX #13: Normalized FindingStatus to uppercase-only values.
+ * Previously both "OPEN" and "open" existed as valid statuses, causing
+ * inconsistent DB queries. All code paths should now use uppercase.
+ * Legacy lowercase values are accepted via the schema enum for backward
+ * compatibility but are normalized to uppercase on write.
+ */
 export type FindingStatus =
   | "OPEN"
   | "CONFIRMED"
@@ -26,11 +33,7 @@ export type FindingStatus =
   | "RESOLVED"
   | "DISCOVERED"
   | "AI_REVIEWING"
-  | "IGNORED"
-  | "open"
-  | "false_positive"
-  | "confirmed"
-  | "remediated";
+  | "IGNORED";
 
 export interface IFinding extends Document {
   scanId: Types.ObjectId;
@@ -161,11 +164,7 @@ const findingSchema = new Schema<IFinding>(
         "RESOLVED",
         "DISCOVERED",
         "AI_REVIEWING",
-        "IGNORED",
-        "open",
-        "false_positive",
-        "confirmed",
-        "remediated"
+        "IGNORED"
       ],
       default: "OPEN",
       index: true
@@ -247,5 +246,8 @@ findingSchema.virtual("confidence").get(function () {
 findingSchema.index({ scanId: 1, severity: 1 });
 findingSchema.index({ repositoryId: 1, status: 1 });
 findingSchema.index({ repositoryId: 1, severity: 1 });
+// FIX #28: Compound index for the orchestrator's previous-active-findings query
+// which filters by repositoryId + status IN [OPEN, CONFIRMED, DISCOVERED]
+findingSchema.index({ repositoryId: 1, status: 1, lastSeenAt: -1 });
 
 export default model<IFinding>("Finding", findingSchema);

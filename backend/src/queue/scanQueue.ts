@@ -117,14 +117,13 @@ export async function processQueueJob(scanId: string): Promise<void> {
 
 /**
  * Enqueue a scan job for async background processing.
+ *
+ * FIX #8: Removed duplicate ScanJob.create() from this function.
+ * ScanJob is now only ever created inside processQueueJob() so there is
+ * exactly one ScanJob document per scan, regardless of whether Redis or
+ * the in-memory fallback is used.
  */
 export async function enqueueScanJob(scanId: string): Promise<{ jobStatus: JobStatus; jobId?: string }> {
-  const scanJob = await ScanJob.create({
-    scanId,
-    status: "QUEUED",
-    attemptCount: 0
-  });
-
   if (isRedisAvailable && scanQueue) {
     try {
       const job = await scanQueue.add("run-scan", { scanId }, {
@@ -144,5 +143,5 @@ export async function enqueueScanJob(scanId: string): Promise<{ jobStatus: JobSt
     console.error(`[Queue] In-memory job execution failed for scan ${scanId}:`, err);
   });
 
-  return { jobStatus: "QUEUED", jobId: String(scanJob._id) };
+  return { jobStatus: "QUEUED" };
 }

@@ -46,6 +46,33 @@ function assetCriticalityWeight(filePath: string): number {
   return Math.min(15, 3 + matches * 4);
 }
 
+/**
+ * FIX #6 & #25: Proper business impact weight based on finding category.
+ * Previously this was missing and businessImpactWeight was incorrectly set
+ * to the same value as assetCriticalityWeight (both used `bw`). Now it
+ * captures the real-world business damage potential of each finding type.
+ */
+function businessImpactWeight(finding: NormalizedFinding): number {
+  // Secrets = maximum impact (credentials exposed = immediate account takeover)
+  if (finding.category === "SECRETS" || finding.tool === "gitleaks" || finding.tool === "secret-scanner") return 20;
+  // CI/CD = supply chain attack surface (code injection → all downstream users)
+  if (finding.category === "CI_CD") return 18;
+  // SCA = known CVEs with public PoC exploits
+  if (finding.category === "SCA" || finding.tool === "trivy" || finding.tool === "osv") {
+    if (finding.cvss !== undefined && finding.cvss >= 9.0) return 20;
+    if (finding.cvss !== undefined && finding.cvss >= 7.0) return 15;
+    return 10;
+  }
+  // IaC misconfigurations = infrastructure exposure
+  if (finding.category === "IAC") return 14;
+  // Container = privilege escalation / escape
+  if (finding.category === "CONTAINER") return 13;
+  // AI security = PII leakage / prompt injection
+  if (finding.category === "AI_SECURITY") return 12;
+  // SAST: general code-level vulnerability
+  return 10;
+}
+
 function exposureWeight(finding: NormalizedFinding): number {
   if (finding.category === "SECRETS" || finding.tool === "gitleaks" || finding.tool === "secret-scanner") return 10;
   if (finding.category === "CI_CD" && /pull-request-target|injection|write-all/i.test(finding.ruleId + " " + finding.title)) return 10;
@@ -98,7 +125,8 @@ export function computeRisk(
 
   const sw = SEVERITY_WEIGHTS[finding.severity];
   const ew = exploitabilityWeight(review);
-  const bw = assetCriticalityWeight(finding.file);
+  const bw = businessImpactWeight(finding);  // FIX #6: now a dedicated calculation
+  const ac = assetCriticalityWeight(finding.file);
   const xw = exposureWeight(finding);
   const aw = authRequiredWeight(finding.file);
   const xv = exploitAvailabilityWeight(finding, review);
@@ -138,7 +166,7 @@ export function computeRisk(
 
   const decision = PolicyEngine.evaluateFindingAction(finding.severity, policy);
 
-  const reason = `Risk Score ${finalScore}/100 (${computedSeverity}) calculated from ${finding.severity.toUpperCase()} severity baseline, Exploitability (${ew}), Asset Criticality (${bw}), Exposure (${xw}), Auth Requirement (${aw}), Exploit Availability (${xv}), and AI confidence (${review.confidence}%). Policy action: ${decision}.`;
+  const reason = `Risk Score ${finalScore}/100 (${computedSeverity}) calculated from ${finding.severity.toUpperCase()} severity baseline, Exploitability (${ew}), Business Impact (${bw}), Asset Criticality (${ac}), Exposure (${xw}), Auth Requirement (${aw}), Exploit Availability (${xv}), and AI confidence (${review.confidence}%). Policy action: ${decision}.`;
 
 
   return {
@@ -148,9 +176,9 @@ export function computeRisk(
     decision,
     severityWeight: sw,
     exploitabilityWeight: ew,
-    businessImpactWeight: bw,
+    businessImpactWeight: bw,  // FIX #6: now the actual business impact value
     exposureWeight: xw,
-    assetCriticalityWeight: bw,
+    assetCriticalityWeight: ac,  // FIX #25: no longer a duplicate of businessImpact
     authRequiredWeight: aw,
     exploitAvailabilityWeight: xv
   };

@@ -107,9 +107,15 @@ export function getCached(url, config = {}, cacheTtlMs = 5000) {
   const now = Date.now();
 
   // Check cache
+  // FIX #18: Check if the request was already aborted before returning a cached
+  // response. Without this, React's useEffect cleanup (controller.abort()) would
+  // not prevent stale state updates from cached data, causing memory leaks.
   if (cacheTtlMs > 0 && responseCache.has(key)) {
     const cached = responseCache.get(key);
     if (now - cached.timestamp < cacheTtlMs) {
+      if (config.signal?.aborted) {
+        return Promise.reject(new DOMException("Request aborted", "AbortError"));
+      }
       return Promise.resolve(cached.data);
     }
     responseCache.delete(key);

@@ -2,6 +2,10 @@ import { Request, Response } from "express";
 import crypto from "crypto";
 import { z } from "zod";
 import Repository from "../models/Repository";
+import Scan from "../models/Scan";
+import Finding from "../models/Finding";
+import AiReview from "../models/AIReview";
+import ScanJob from "../models/ScanJob";
 import { AppError } from "../middleware/errorHandler";
 import { asyncHandler } from "../utils/asyncHandler";
 
@@ -138,9 +142,23 @@ export const updateRepository = asyncHandler(async (req: Request, res: Response)
  * DELETE /api/repositories/:id
  */
 export const deleteRepository = asyncHandler(async (req: Request, res: Response) => {
-  const repository = await Repository.findByIdAndDelete(req.params.id);
+  const repository = await Repository.findById(req.params.id);
   if (!repository) {
     throw new AppError("Repository not found", 404);
   }
-  res.status(200).json({ success: true, message: "Repository deleted successfully" });
+
+  // Find all scans associated with this repository to delete their related records
+  const scans = await Scan.find({ repositoryId: repository._id }).select("_id");
+  const scanIds = scans.map(s => s._id);
+
+  // Cascading deletes
+  if (scanIds.length > 0) {
+    await ScanJob.deleteMany({ scanId: { $in: scanIds } });
+    await AiReview.deleteMany({ scanId: { $in: scanIds } });
+  }
+  await Finding.deleteMany({ repositoryId: repository._id });
+  await Scan.deleteMany({ repositoryId: repository._id });
+  await Repository.findByIdAndDelete(req.params.id);
+
+  res.status(200).json({ success: true, message: "Repository and all related data deleted successfully" });
 });
