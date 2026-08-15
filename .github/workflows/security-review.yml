@@ -1,0 +1,131 @@
+name: AI Secure SDLC Review
+
+on:
+  pull_request:
+    types: [opened, synchronize]
+
+jobs:
+  security-scan:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # Full history for gitleaks
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+
+      - name: Install Semgrep
+        run: pip3 install semgrep
+
+      - name: Install Gitleaks
+        run: |
+          wget https://github.com/gitleaks/gitleaks/releases/download/v8.18.0/gitleaks-linux-x64
+          chmod +x gitleaks-linux-x64
+          sudo mv gitleaks-linux-x64 /usr/local/bin/gitleaks
+
+      - name: Install Trivy
+        run: |
+          wget -qO - https://aquasecurity.github.io/trivy-repo/deb/public.key | sudo apt-key add -
+          echo "deb https://aquasecurity.github.io/trivy-repo/deb $(lsb_release -sc) main" | sudo tee -a /etc/apt/sources.list.d/trivy.list
+          sudo apt-get update && sudo apt-get install -y trivy
+
+      - name: Run Semgrep
+        id: semgrep
+        run: |
+          semgrep --config=p/owasp-top-ten --json --output=semgrep-report.json . || true
+          echo "Semgrep scan completed"
+
+      - name: Run Gitleaks
+        id: gitleaks
+        run: |
+          gitleaks detect --source . --report-path gitleaks-report.json --verbose || true
+          echo "Gitleaks scan completed"
+
+      - name: Run Trivy (filesystem)
+        id: trivy
+        run: |
+          trivy fs --format json --output trivy-report.json . || true
+          echo "Trivy scan completed"
+
+      - name: Trigger AI Secure SDLC webhook
+        id: webhook
+        run: |
+          RESPONSE=$(curl -s -X POST \
+            -H "Content-Type: application/json" \
+            -d '{
+              "action": "opened",
+              "pull_request": {
+                "number": ${{ github.event.pull_request.number }},
+                "title": "${{ github.event.pull_request.title }}",
+                "body": "${{ github.event.pull_request.body }}",
+                "head": {
+                  "sha": "${{ github.event.pull_request.head.sha }}",
+                  "ref": "${{ github.event.pull_request.head.ref }}",
+                  "repo": {
+                    "name": "${{ github.event.repository.name }}",
+                    "full_name": "${{ github.event.repository.full_name }}",
+                    "owner": {
+                      "login": "${{ github.event.repository.owner.login }}"
+                    }
+                  }
+                }
+              }
+            }' \
+            "${{ secrets.AI_SECURE_SDLC_WEBHOOK_URL }}")
+          echo "Webhook response: $RESPONSE"
+          SCAN_ID=$(echo $RESPONSE | jq -r '.scanId // empty')
+          echo "SCAN_ID=$SCAN_ID" >> $GITHUB_ENV
+        env:
+          AI_SECURE_SDLC_WEBHOOK_URL: ${{ secrets.AI_SECURE_SDLC_WEBHOOK_URL }}
+
+      - name: Poll AI review status & CI Gate Decision
+        run: |
+          if [ -z "$SCAN_ID" ]; then
+            echo "No Scan ID received from webhook. Proceeding..."
+            exit 0
+          fi
+          MAX_ATTEMPTS=30
+          ATTEMPT=0
+          API_BASE="${{ secrets.AI_SECURE_SDLC_API_URL }}"
+          while [ $ATTEMPT -lt $MAX_ATTEMPTS ]; do
+            echo "Polling scan status ($SCAN_ID)... (attempt $((ATTEMPT+1))/$MAX_ATTEMPTS)"
+            STATUS_RESP=$(curl -s "$API_BASE/api/scans/$SCAN_ID/status")
+            STATUS=$(echo $STATUS_RESP | jq -r '.data.status // empty')
+            GATE=$(echo $STATUS_RESP | jq -r '.data.gateResult // empty')
+            
+            echo "Current status: $STATUS, Gate: $GATE"
+            
+            if [ "$STATUS" = "completed" ]; then
+              if [ "$GATE" = "fail" ]; then
+                echo "❌ Security Gate FAILED: Vulnerabilities detected above threshold."
+                exit 1
+              else
+                echo "✅ Security Gate PASSED."
+                exit 0
+              fi
+            elif [ "$STATUS" = "failed" ]; then
+              echo "❌ Security scan process failed."
+              exit 1
+            fi
+            
+            sleep 10
+            ATTEMPT=$((ATTEMPT+1))
+          done
+          echo "⚠️ Scan timed out waiting for AI review."
+          exit 1
+
+      - name: Upload scanner reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: security-reports
+          path: |
+            semgrep-report.json
+            gitleaks-report.json
+            trivy-report.json

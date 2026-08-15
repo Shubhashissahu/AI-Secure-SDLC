@@ -1,0 +1,185 @@
+rules:
+  - id: java-sql-injection
+    pattern-either:
+      - pattern: |
+          String $QUERY = $STR + $X;
+          ...
+          $STMT.executeQuery($QUERY);
+      - pattern: |
+          String $QUERY = $STR + $X;
+          ...
+          $STMT.executeUpdate($QUERY);
+      - pattern: |
+          String $QUERY = $STR + $X;
+          ...
+          $STMT.execute($QUERY);
+      - pattern: $STMT.executeQuery($STR + $X)
+      - pattern: $STMT.executeUpdate($STR + $X)
+      - pattern: $STMT.execute($STR + $X)
+      - pattern: $STMT.executeQuery(String.format(...))
+      - pattern: $STMT.executeUpdate(String.format(...))
+      - pattern: $CONN.prepareStatement($STR + $X)
+      - pattern: $CONN.prepareStatement(String.format(...))
+    message: "SQL Injection: SQL statement constructed via dynamic string concatenation."
+    languages:
+      - java
+    severity: ERROR
+    metadata:
+      cwe: "CWE-89"
+      owasp: "A03:2021 - Injection"
+      category: security
+      confidence: HIGH
+
+  - id: java-command-injection
+    pattern-either:
+      - pattern: Runtime.getRuntime().exec($CMD + $ARG)
+      - pattern: Runtime.getRuntime().exec("..." + $ARG)
+      - pattern: new ProcessBuilder($CMD + $ARG)
+      - pattern: new ProcessBuilder("..." + $ARG)
+    message: "Command Injection: User-controlled arguments passed directly to system execution."
+    languages:
+      - java
+    severity: ERROR
+    metadata:
+      cwe: "CWE-78"
+      owasp: "A03:2021 - Injection"
+      category: security
+      confidence: HIGH
+
+  - id: java-path-traversal
+    pattern-either:
+      - pattern: new File($DIR, $INPUT)
+      - pattern: new File($DIR + $INPUT)
+      - pattern: new FileInputStream($DIR + $INPUT)
+      - pattern: new FileReader($DIR + $INPUT)
+    message: "Path Traversal: File path created using untrusted input without boundary verification."
+    languages:
+      - java
+    severity: ERROR
+    metadata:
+      cwe: "CWE-22"
+      owasp: "A01:2021 - Broken Access Control"
+      category: security
+      confidence: HIGH
+
+  - id: java-insecure-deserialization
+    pattern-either:
+      - pattern: new ObjectInputStream($STREAM).readObject()
+      - pattern: new XMLDecoder($STREAM).readObject()
+    message: "Insecure Deserialization: Untrusted stream deserialized using ObjectInputStream or XMLDecoder."
+    languages:
+      - java
+    severity: ERROR
+    metadata:
+      cwe: "CWE-502"
+      owasp: "A08:2021 - Software and Data Integrity Failures"
+      category: security
+      confidence: HIGH
+
+  - id: java-ssrf
+    pattern-either:
+      - pattern: new URL($USER_URL).openConnection()
+      - pattern: new URL($USER_URL).openStream()
+      - pattern: HttpRequest.newBuilder().uri(URI.create($USER_URL))
+    message: "Server-Side Request Forgery (SSRF): Untrusted URL fetched without host allowlist check."
+    languages:
+      - java
+    severity: ERROR
+    metadata:
+      cwe: "CWE-918"
+      owasp: "A10:2021 - Server-Side Request Forgery"
+      category: security
+      confidence: HIGH
+
+  - id: java-hardcoded-credential
+    pattern-either:
+      - pattern: String $PASS = "SuperSecret123!";
+      - pattern: String DB_PASS = "...";
+      - pattern: String PASSWORD = "...";
+      - pattern: String API_KEY = "...";
+      - pattern: String SECRET_KEY = "...";
+    message: "Hardcoded credentials detected in source code. Move sensitive values to environment variables."
+    languages:
+      - java
+    severity: ERROR
+    metadata:
+      cwe: "CWE-798"
+      owasp: "A07:2021 - Identification and Authentication Failures"
+      category: security
+      confidence: HIGH
+
+  - id: java-weak-cryptography
+    pattern-either:
+      - pattern: Cipher.getInstance("DES")
+      - pattern: Cipher.getInstance("DES/ECB/PKCS5Padding")
+      - pattern: Cipher.getInstance("RC4")
+      - pattern: Cipher.getInstance("AES/ECB/PKCS5Padding")
+    message: "Weak Cryptography: Insecure cryptographic cipher or ECB mode detected."
+    languages:
+      - java
+    severity: ERROR
+    metadata:
+      cwe: "CWE-327"
+      owasp: "A02:2021 - Cryptographic Failures"
+      category: security
+      confidence: HIGH
+
+  - id: java-weak-password-hashing
+    pattern-either:
+      - pattern: MessageDigest.getInstance("MD5")
+      - pattern: MessageDigest.getInstance("SHA-1")
+      - pattern: MessageDigest.getInstance("md5")
+      - pattern: MessageDigest.getInstance("sha-1")
+    message: "Weak cryptographic hash function used (MD5/SHA-1). Use SHA-256 or bcrypt."
+    languages:
+      - java
+    severity: WARNING
+    metadata:
+      cwe: "CWE-916"
+      owasp: "A02:2021 - Cryptographic Failures"
+      category: security
+      confidence: HIGH
+
+  - id: java-open-redirect
+    pattern-either:
+      - pattern: $RESP.sendRedirect($REQ.getParameter($PARAM))
+      - pattern: $RESP.sendRedirect($URL)
+    message: "Open Redirect: Redirecting user to untrusted external target."
+    languages:
+      - java
+    severity: WARNING
+    metadata:
+      cwe: "CWE-601"
+      owasp: "A01:2021 - Broken Access Control"
+      category: security
+      confidence: MEDIUM
+
+  - id: java-xxe
+    pattern-either:
+      - pattern: |
+          DocumentBuilderFactory $DBF = DocumentBuilderFactory.newInstance();
+          ...
+          $DBF.newDocumentBuilder().parse(...);
+    message: "Potential XML External Entity (XXE) Injection: DocumentBuilderFactory parsed without explicitly disabling external DTD."
+    languages:
+      - java
+    severity: ERROR
+    metadata:
+      cwe: "CWE-611"
+      owasp: "A05:2021 - Security Misconfiguration"
+      category: security
+      confidence: MEDIUM
+
+  - id: java-ldap-injection
+    pattern-either:
+      - pattern: $CTX.search($BASE, "(uid=" + $USER + ")", ...)
+      - pattern: $CTX.search($BASE, $FILTER + $INPUT, ...)
+    message: "LDAP Injection: LDAP search filter built with unescaped string concatenation."
+    languages:
+      - java
+    severity: ERROR
+    metadata:
+      cwe: "CWE-90"
+      owasp: "A03:2021 - Injection"
+      category: security
+      confidence: HIGH

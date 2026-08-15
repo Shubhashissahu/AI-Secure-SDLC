@@ -1,0 +1,76 @@
+# Gitleaks configuration for AI Secure SDLC
+# Explicit rules for API keys, AWS credentials, GitHub tokens, JWT secrets, database passwords, private keys, access tokens
+
+[allowlist]
+  description = "Global allowlist"
+  paths = [
+    '''node_modules''',
+    '''\.git''',
+    '''dist''',
+    '''build''',
+    '''\.env\.example''',
+    '''package-lock\.json''',
+    '''go\.sum''',
+    '''poetry\.lock''',
+    '''Gemfile\.lock''',
+  ]
+
+[[rules]]
+  id = "aws-access-key-id"
+  description = "AWS Access Key ID"
+  regex = '''(?:A3T[A-Z0-9]|AKIA|AGPA|AIDA|AROA|AIPA|ANPA|ANVA|ASIA)[0-9A-Z]{16}'''
+  keywords = ["AKIA", "ASIA", "AGPA", "AIDA"]
+
+[[rules]]
+  id = "aws-secret-access-key"
+  description = "AWS Secret Access Key"
+  regex = '''(?i)(?:aws_secret_access_key|aws_secret_key|secret_access_key)\s*[:=]\s*["']?([A-Za-z0-9/+=]{40})["']?'''
+  keywords = ["aws_secret_access_key", "secret_access_key"]
+
+[[rules]]
+  id = "github-pat"
+  description = "GitHub Personal Access Token"
+  regex = '''gh[pousr]_[A-Za-z0-9_]{36,255}'''
+  keywords = ["ghp_", "gho_", "ghu_", "ghs_", "ghr_"]
+
+[[rules]]
+  id = "private-key"
+  description = "Asymmetric Private Key"
+  regex = '''(?i)-----BEGIN (?:[A-Z0-9_-]+\s)?PRIVATE KEY-----'''
+  keywords = ["BEGIN RSA PRIVATE KEY", "BEGIN PRIVATE KEY", "BEGIN OPENSSH PRIVATE KEY", "BEGIN EC PRIVATE KEY"]
+
+[[rules]]
+  id = "jwt-secret-assignment"
+  description = "Hardcoded JWT Secret"
+  regex = '''(?i)(?:jwt_secret|jwt_key|jwt_secret_key|token_secret)\s*[:=]\s*["']([^"'\r\n]{6,})["']'''
+  keywords = ["jwt_secret", "jwt_key"]
+
+[[rules]]
+  id = "database-password"
+  description = "Database URI Password"
+  regex = '''(?i)(?:postgres|postgresql|mysql|mongodb|mongodb\+srv|redis|mssql):\/\/[a-zA-Z0-9._~%-]+:([^@\s'"]+)@[a-zA-Z0-9.-]+'''
+  keywords = ["postgres://", "postgresql://", "mysql://", "mongodb://", "redis://"]
+
+[[rules]]
+  id = "openai-api-key"
+  description = "OpenAI API Key"
+  regex = '''sk-[a-zA-Z0-9]{32,64}'''
+  keywords = ["sk-"]
+
+[[rules]]
+  id = "stripe-api-key"
+  description = "Stripe Secret Key"
+  regex = '''sk_live_[0-9a-zA-Z]{24,34}'''
+  keywords = ["sk_live_"]
+
+[[rules]]
+  id = "google-api-key"
+  description = "Google Cloud API Key"
+  regex = '''AIza[0-9A-Za-z-_]{35}'''
+  keywords = ["AIza"]
+
+[[rules]]
+  id = "bearer-token"
+  description = "Hardcoded Bearer Token"
+  regex = '''(?i)Bearer\s+([A-Za-z0-9-._~+/=]{24,})'''
+  keywords = ["Bearer "]

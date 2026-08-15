@@ -1,0 +1,14 @@
+# Trivy configuration for AI Secure SDLC
+severity:
+  - CRITICAL
+  - HIGH
+  - MEDIUM
+
+scan:
+  security-checks:
+    - vuln
+  skip-dirs:
+    - node_modules
+    - .git
+    - dist
+    - build

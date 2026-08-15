@@ -1,0 +1,321 @@
+rules:
+  - id: javascript-sql-injection
+    pattern-either:
+      - pattern: "db.query($SQL + $INPUT, ...)"
+      - pattern: "db.query(`...${$INPUT}...`, ...)"
+      - pattern: "sequelize.query($SQL + $INPUT, ...)"
+      - pattern: "sequelize.query(`...${$INPUT}...`, ...)"
+      - pattern: "knex.raw($SQL + $INPUT, ...)"
+      - pattern: "knex.raw(`...${$INPUT}...`, ...)"
+      - pattern: "client.query($SQL + $INPUT, ...)"
+      - pattern: "client.query(`...${$INPUT}...`, ...)"
+      - pattern: "pool.query($SQL + $INPUT, ...)"
+      - pattern: "pool.query(`...${$INPUT}...`, ...)"
+      - pattern: "connection.query($SQL + $INPUT, ...)"
+      - pattern: "connection.query(`...${$INPUT}...`, ...)"
+    message: "SQL Injection: Dynamic SQL query constructed via untrusted string concatenation or interpolation."
+    languages:
+      - javascript
+      - typescript
+    severity: ERROR
+    metadata:
+      cwe: "CWE-89"
+      owasp: "A03:2021 - Injection"
+      category: security
+      confidence: HIGH
+
+  - id: javascript-xss
+    pattern-either:
+      - pattern: "res.send($REQ.query.$PARAM)"
+      - pattern: "res.send($REQ.body.$PARAM)"
+      - pattern: "res.send($REQ.params.$PARAM)"
+      - pattern: "res.write($REQ.query.$PARAM)"
+      - pattern: "res.write($REQ.body.$PARAM)"
+      - pattern: "res.write($REQ.params.$PARAM)"
+      - pattern: "element.innerHTML = \"...\" + $USER_INPUT + \"...\""
+      - pattern: "element.innerHTML = $USER_INPUT"
+      - pattern: "element.outerHTML = $USER_INPUT"
+      - pattern: "document.write($USER_INPUT)"
+      - pattern: "<div dangerouslySetInnerHTML={{ __html: $USER_INPUT }} />"
+    message: "Cross-Site Scripting (XSS): Unsanitized user-controlled input rendered directly in HTML/HTTP response."
+    languages:
+      - javascript
+      - typescript
+    severity: WARNING
+    metadata:
+      cwe: "CWE-79"
+      owasp: "A03:2021 - Injection"
+      category: security
+      confidence: HIGH
+
+  - id: javascript-command-injection
+    pattern-either:
+      - pattern: "exec($CMD + $ARG, ...)"
+      - pattern: "exec(`...${$ARG}...`, ...)"
+      - pattern: "execSync($CMD + $ARG, ...)"
+      - pattern: "execSync(`...${$ARG}...`, ...)"
+      - pattern: "spawn($CMD, ..., { shell: true, ... })"
+    message: "Command Injection: Untrusted input concatenated into system shell command execution."
+    languages:
+      - javascript
+      - typescript
+    severity: ERROR
+    metadata:
+      cwe: "CWE-78"
+      owasp: "A03:2021 - Injection"
+      category: security
+      confidence: HIGH
+
+  - id: javascript-path-traversal
+    pattern-either:
+      - pattern: "fs.readFile(path.join($DIR, $INPUT), ...)"
+      - pattern: "fs.readFileSync(path.join($DIR, $INPUT), ...)"
+      - pattern: "fs.readFile($DIR + $INPUT, ...)"
+      - pattern: "fs.readFileSync($DIR + $INPUT, ...)"
+      - pattern: "fs.createReadStream(path.join($DIR, $INPUT), ...)"
+      - pattern: "fs.createReadStream($DIR + $INPUT, ...)"
+      - pattern: "res.sendFile(path.join($DIR, $INPUT), ...)"
+      - pattern: "res.sendFile($DIR + $INPUT, ...)"
+    message: "Path Traversal: File system operation accesses path constructed directly from unvalidated user input."
+    languages:
+      - javascript
+      - typescript
+    severity: ERROR
+    metadata:
+      cwe: "CWE-22"
+      owasp: "A01:2021 - Broken Access Control"
+      category: security
+      confidence: HIGH
+
+  - id: javascript-insecure-deserialization
+    pattern-either:
+      - pattern: "serialize.unserialize($INPUT, ...)"
+      - pattern: "nodeSerialize.unserialize($INPUT, ...)"
+      - pattern: "require('node-serialize').unserialize($INPUT, ...)"
+      - pattern: "require('serialize-to-js').deserialize($INPUT, ...)"
+      - pattern: "yaml.load($INPUT, { schema: yaml.DEFAULT_SAFE_SCHEMA })"
+      - pattern: "yaml.load($INPUT)"
+    message: "Insecure Deserialization: Unsanitized data deserialized using unsafe deserializer, allowing remote code execution."
+    languages:
+      - javascript
+      - typescript
+    severity: ERROR
+    metadata:
+      cwe: "CWE-502"
+      owasp: "A08:2021 - Software and Data Integrity Failures"
+      category: security
+      confidence: HIGH
+
+  - id: javascript-ssrf
+    pattern-either:
+      - pattern: "axios.get($REQ.query.$PARAM, ...)"
+      - pattern: "axios.get($REQ.body.$PARAM, ...)"
+      - pattern: "axios.get($TARGET_URL)"
+      - pattern: "axios.post($REQ.query.$PARAM, ...)"
+      - pattern: "axios.post($REQ.body.$PARAM, ...)"
+      - pattern: "axios.post($TARGET_URL, ...)"
+      - pattern: "fetch($REQ.query.$PARAM, ...)"
+      - pattern: "fetch($REQ.body.$PARAM, ...)"
+      - pattern: "fetch($TARGET_URL)"
+      - pattern: "http.get($TARGET_URL, ...)"
+      - pattern: "https.get($TARGET_URL, ...)"
+      - pattern: "request($TARGET_URL, ...)"
+    message: "Server-Side Request Forgery (SSRF): HTTP request dispatched to arbitrary user-controlled URL without validation."
+    languages:
+      - javascript
+      - typescript
+    severity: ERROR
+    metadata:
+      cwe: "CWE-918"
+      owasp: "A10:2021 - Server-Side Request Forgery"
+      category: security
+      confidence: HIGH
+
+  - id: javascript-hardcoded-credentials
+    pattern-either:
+      - pattern: "const $SECRET = \"AKIAIOSFODNN7EXAMPLE\";"
+      - pattern: "const $PASS = \"SuperSecretPassword123!\";"
+      - pattern: "const $KEY = \"ghp_xxxxxxxxxxxxxxxxxxxx\";"
+      - pattern: "const JWT_SECRET = \"...\";"
+      - pattern: "const API_KEY = \"...\";"
+      - pattern: "const SECRET_KEY = \"...\";"
+      - pattern: "const DB_PASSWORD = \"...\";"
+      - pattern: "AWS_SECRET_ACCESS_KEY: \"AKIAIOSFODNN7EXAMPLE\""
+      - pattern: "DATABASE_PASSWORD: \"SuperSecretPassword123!\""
+    message: "Hardcoded Credentials: Sensitive authentication secret or cryptographic key committed to source code."
+    languages:
+      - javascript
+      - typescript
+    severity: ERROR
+    metadata:
+      cwe: "CWE-798"
+      owasp: "A07:2021 - Identification and Authentication Failures"
+      category: security
+      confidence: HIGH
+
+  - id: javascript-weak-cryptography
+    pattern-either:
+      - pattern: "crypto.createCipheriv(\"des\", ...)"
+      - pattern: "crypto.createCipheriv(\"des-ede\", ...)"
+      - pattern: "crypto.createCipheriv(\"des-ede3\", ...)"
+      - pattern: "crypto.createCipheriv(\"rc4\", ...)"
+      - pattern: "crypto.createCipheriv(\"blowfish\", ...)"
+      - pattern: "crypto.createCipheriv(\"aes-128-ecb\", ...)"
+      - pattern: "crypto.createCipheriv(\"aes-256-ecb\", ...)"
+      - pattern: "crypto.createCipher(\"des\", ...)"
+      - pattern: "crypto.createCipher(\"rc4\", ...)"
+    message: "Weak Cryptography: Insecure or deprecated cryptographic algorithm / mode used (DES, RC4, Blowfish, or ECB mode)."
+    languages:
+      - javascript
+      - typescript
+    severity: WARNING
+    metadata:
+      cwe: "CWE-327"
+      owasp: "A02:2021 - Cryptographic Failures"
+      category: security
+      confidence: HIGH
+
+  - id: javascript-weak-password-hashing
+    pattern-either:
+      - pattern: "crypto.createHash(\"md5\")"
+      - pattern: "crypto.createHash(\"sha1\")"
+      - pattern: "crypto.createHash(\"md4\")"
+      - pattern: "crypto.createHash(\"MD5\")"
+      - pattern: "crypto.createHash(\"SHA1\")"
+    message: "Weak Password Hashing / Digest: MD5 or SHA-1 hash algorithm used. Use argon2, bcrypt, or SHA-256."
+    languages:
+      - javascript
+      - typescript
+    severity: WARNING
+    metadata:
+      cwe: "CWE-916"
+      owasp: "A02:2021 - Cryptographic Failures"
+      category: security
+      confidence: HIGH
+
+  - id: javascript-open-redirect
+    pattern-either:
+      - pattern: "res.redirect(req.query.target)"
+      - pattern: "res.redirect(req.query.$PARAM)"
+      - pattern: "res.redirect(req.body.$PARAM)"
+      - pattern: "res.redirect(req.params.$PARAM)"
+    message: "Open Redirect: Application redirects user to unvalidated external URL supplied in request parameter."
+    languages:
+      - javascript
+      - typescript
+    severity: WARNING
+    metadata:
+      cwe: "CWE-601"
+      owasp: "A01:2021 - Broken Access Control"
+      category: security
+      confidence: MEDIUM
+
+  - id: javascript-insecure-file-upload
+    pattern-either:
+      - pattern: |
+          filename: function($REQ, $FILE, $CB) {
+            $CB(null, $FILE.originalname);
+          }
+      - pattern: "fs.writeFileSync(path.join($DEST, $FILE.originalname), ...)"
+      - pattern: "fs.writeFile(path.join($DEST, $FILE.originalname), ...)"
+      - pattern: "path.join($DEST, file.originalname)"
+    message: "Insecure File Upload: Uploaded file written directly using user-controlled original filename without sanitization or extension validation."
+    languages:
+      - javascript
+      - typescript
+    severity: ERROR
+    metadata:
+      cwe: "CWE-434"
+      owasp: "A04:2021 - Insecure Design"
+      category: security
+      confidence: HIGH
+
+  - id: javascript-xxe
+    pattern-either:
+      - pattern: "libxmljs.parseXmlString($XML, { noent: true, ... })"
+      - pattern: "libxmljs.parseXml($XML, { noent: true, ... })"
+      - pattern: "new DOMParser({ ... }).parseFromString($XML)"
+    message: "XML External Entity (XXE) Injection: XML parser configured to resolve external entities, allowing file disclosure or SSRF."
+    languages:
+      - javascript
+      - typescript
+    severity: ERROR
+    metadata:
+      cwe: "CWE-611"
+      owasp: "A05:2021 - Security Misconfiguration"
+      category: security
+      confidence: HIGH
+
+  - id: javascript-ldap-injection
+    pattern-either:
+      - pattern: "$CLIENT.search($BASE, { filter: $FILTER + $INPUT, ... }, ...)"
+      - pattern: "$CLIENT.search($BASE, { filter: `...${$INPUT}...`, ... }, ...)"
+      - pattern: "$CLIENT.search($BASE, { filter: \"...\" + $INPUT + \"...\", ... }, ...)"
+      - pattern: "ldap.createClient(...).search($BASE, { filter: $FILTER + $INPUT, ... }, ...)"
+    message: "LDAP Injection: LDAP query filter constructed dynamically via unescaped string concatenation with untrusted input."
+    languages:
+      - javascript
+      - typescript
+    severity: ERROR
+    metadata:
+      cwe: "CWE-90"
+      owasp: "A03:2021 - Injection"
+      category: security
+      confidence: HIGH
+
+  - id: javascript-nosql-injection
+    pattern-either:
+      - pattern: "$MODEL.find({ $WHERE: `...${$INPUT}...` })"
+      - pattern: "$MODEL.find({ $WHERE: $CODE + $INPUT })"
+      - pattern: "$COLLECTION.find({ $KEY: $REQ.body })"
+      - pattern: "$COLLECTION.findOne({ $KEY: $REQ.body })"
+      - pattern: "$COLLECTION.find({ $KEY: $REQ.query })"
+      - pattern: "$COLLECTION.findOne({ $KEY: $REQ.query })"
+    message: "NoSQL Injection: Unsanitized query selector or dynamic $where clause evaluated in MongoDB/NoSQL query."
+    languages:
+      - javascript
+      - typescript
+    severity: ERROR
+    metadata:
+      cwe: "CWE-943"
+      owasp: "A03:2021 - Injection"
+      category: security
+      confidence: HIGH
+
+  - id: javascript-prototype-pollution
+    pattern-either:
+      - pattern: |
+          for (let $KEY in $SRC) {
+            $TARGET[$KEY] = $SRC[$KEY];
+          }
+      - pattern: "$OBJ[__proto__][$KEY] = $VAL"
+      - pattern: "$TARGET[$KEY][$SUBKEY] = $VAL"
+    message: "Prototype Pollution: Recursive object property assignment without validating __proto__, constructor, or prototype properties."
+    languages:
+      - javascript
+      - typescript
+    severity: ERROR
+    metadata:
+      cwe: "CWE-1321"
+      owasp: "A03:2021 - Injection"
+      category: security
+      confidence: HIGH
+
+  - id: javascript-redos
+    pattern-either:
+      - pattern: "new RegExp($USER_INPUT, ...)"
+      - pattern: "new RegExp($PREFIX + $USER_INPUT, ...)"
+      - pattern: "/(a+)+$/"
+      - pattern: "/([a-zA-Z0-9]+)+$/"
+      - pattern: "/([a-z]+)+$/"
+      - pattern: "/(.*a)+/"
+    message: "Regular Expression Denial of Service (ReDoS): Catastrophic backtracking in regex pattern or user-controlled dynamic RegExp."
+    languages:
+      - javascript
+      - typescript
+    severity: WARNING
+    metadata:
+      cwe: "CWE-1333"
+      owasp: "A03:2021 - Injection"
+      category: security
+      confidence: HIGH

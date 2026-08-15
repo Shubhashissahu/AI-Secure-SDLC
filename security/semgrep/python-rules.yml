@@ -1,0 +1,103 @@
+rules:
+  - id: python-sql-injection
+    pattern-either:
+      - pattern: "cursor.execute($SQL + $X)"
+      - pattern: "cursor.execute(f\"...{$X}...\")"
+      - pattern: "cursor.execute(\"...\" % $X)"
+      - pattern: "cursor.execute(\"...\".format($X))"
+      - pattern: "db.session.execute($SQL + $X)"
+      - pattern: "db.session.execute(f\"...{$X}...\")"
+    message: "SQL Injection: Dynamic SQL query constructed via untrusted string formatting or concatenation."
+    languages:
+      - python
+    severity: ERROR
+    metadata:
+      cwe: "CWE-89"
+      owasp: "A03:2021 - Injection"
+      category: security
+      confidence: HIGH
+
+  - id: python-command-injection
+    pattern-either:
+      - pattern: "os.system($CMD + $ARG)"
+      - pattern: "os.system(f\"...{$ARG}...\")"
+      - pattern: "os.popen($CMD + $ARG)"
+      - pattern: "os.popen(f\"...{$ARG}...\")"
+      - pattern: "subprocess.Popen($CMD + $ARG, ..., shell=True, ...)"
+      - pattern: "subprocess.Popen(f\"...{$ARG}...\", ..., shell=True, ...)"
+      - pattern: "subprocess.run($CMD + $ARG, ..., shell=True, ...)"
+      - pattern: "subprocess.run(f\"...{$ARG}...\", ..., shell=True, ...)"
+      - pattern: "subprocess.call($CMD + $ARG, ..., shell=True, ...)"
+      - pattern: "subprocess.call(f\"...{$ARG}...\", ..., shell=True, ...)"
+    message: "Command Injection: Untrusted input concatenated into system command executed with shell=True or os.system."
+    languages:
+      - python
+    severity: ERROR
+    metadata:
+      cwe: "CWE-78"
+      owasp: "A03:2021 - Injection"
+      category: security
+      confidence: HIGH
+
+  - id: python-insecure-deserialization
+    pattern-either:
+      - pattern: "pickle.loads($INPUT)"
+      - pattern: "pickle.load($INPUT)"
+      - pattern: "_pickle.loads($INPUT)"
+      - pattern: "yaml.load($INPUT, Loader=yaml.Loader)"
+      - pattern: "yaml.unsafe_load($INPUT)"
+    message: "Insecure Deserialization: Untrusted data passed to pickle or unsafe YAML loader, allowing remote code execution."
+    languages:
+      - python
+    severity: ERROR
+    metadata:
+      cwe: "CWE-502"
+      owasp: "A08:2021 - Software and Data Integrity Failures"
+      category: security
+      confidence: HIGH
+
+  - id: python-path-traversal
+    pattern-either:
+      - pattern: "open($PATH + $USER_INPUT, ...)"
+      - pattern: "open(f\"...{$USER_INPUT}...\", ...)"
+      - pattern: "os.path.join($BASE, $USER_INPUT)"
+    message: "Path Traversal: File path constructed from untrusted user input without path normalization or boundary check."
+    languages:
+      - python
+    severity: ERROR
+    metadata:
+      cwe: "CWE-22"
+      owasp: "A01:2021 - Broken Access Control"
+      category: security
+      confidence: HIGH
+
+  - id: python-weak-cryptography
+    pattern-either:
+      - pattern: "hashlib.md5(...)"
+      - pattern: "hashlib.sha1(...)"
+      - pattern: "Crypto.Cipher.DES.new(...)"
+      - pattern: "Crypto.Cipher.ARC4.new(...)"
+    message: "Weak Cryptography: Insecure hashing (MD5/SHA1) or weak encryption cipher used."
+    languages:
+      - python
+    severity: WARNING
+    metadata:
+      cwe: "CWE-327"
+      owasp: "A02:2021 - Cryptographic Failures"
+      category: security
+      confidence: HIGH
+
+  - id: python-prompt-injection
+    pattern-either:
+      - pattern: "f\"...{user_input}...\""
+      - pattern: "f\"...{prompt}...\""
+      - pattern: "f\"...{input_text}...\""
+    message: "Potential Prompt Injection: Unsanitized user input formatted directly into LLM prompt template."
+    languages:
+      - python
+    severity: ERROR
+    metadata:
+      cwe: "CWE-20"
+      owasp: "OWASP-LLM01: Prompt Injection"
+      category: security
+      confidence: HIGH

@@ -1,0 +1,58 @@
+node_modules/
+.env
+.env.*
+dist/
+build/
+.vscode/
+
+# IDE
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+*.sublime-project
+*.sublime-workspace
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+
+# OS
+Thumbs.db
+
+# Runtime data
+pids/
+*.pid
+*.seed
+*.pid.lock
+
+# Coverage
+coverage/
+.nyc_output/
+
+# Test results
+test-results/
+junit.xml
+
+# Security scanner outputs
+semgrep-report.json
+gitleaks-report.json
+trivy-report.json
+
+# MongoDB
+data/
+mongo-data/
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+
+# Misc
+*.bak
+.env.production.local
