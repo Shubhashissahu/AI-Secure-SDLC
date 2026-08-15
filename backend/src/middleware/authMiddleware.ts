@@ -7,21 +7,22 @@ export interface AuthenticatedRequest extends Request {
 }
 
 /**
- * Verifies the Authorization: Bearer <token> header on every route it's
- * applied to. This is the middleware that was missing for every route built
- * in Phases 2-6 — until now, anyone who could reach the API could register
- * repositories, trigger scans, or alter finding status with no credential
- * check at all. Applied in server.ts to /api/repositories, /api/scans, and
- * /api/findings.
+ * Verifies the Authorization: Bearer <token> header on every protected route.
+ *
+ * FIX #1: Removed the dangerous `!process.env.NODE_ENV` backdoor that would
+ * silently grant admin access on any server where NODE_ENV was not set.
+ * Auth bypass is now only allowed via an explicit DISABLE_AUTH=true env flag.
+ * This prevents the bypass from activating accidentally on staging/production.
  */
 export function requireAuth(req: AuthenticatedRequest, _res: Response, next: NextFunction): void {
-    const header = req.headers.authorization;
+    // Explicit opt-in bypass for local development only — never for production
+    if (process.env.DISABLE_AUTH === "true" && process.env.NODE_ENV !== "production") {
+        req.user = { id: "dev-user-id", role: "admin" };
+        return next();
+    }
 
+    const header = req.headers.authorization;
     if (!header || !header.startsWith("Bearer ")) {
-        if (process.env.NODE_ENV === "development" || !process.env.NODE_ENV) {
-            req.user = { id: "dev-user-id", role: "admin" };
-            return next();
-        }
         throw new AppError("Authentication required", 401);
     }
 
@@ -37,10 +38,6 @@ export function requireAuth(req: AuthenticatedRequest, _res: Response, next: Nex
         req.user = { id: payload.sub, role: payload.role };
         next();
     } catch {
-        if (process.env.NODE_ENV === "development" || !process.env.NODE_ENV) {
-            req.user = { id: "dev-user-id", role: "admin" };
-            return next();
-        }
         throw new AppError("Invalid or expired token", 401);
     }
 }

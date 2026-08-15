@@ -8,6 +8,11 @@ const navLinks = [
 ];
 
 function Navbar() {
+  function handleLogout() {
+    localStorage.removeItem("token");
+    window.location.reload();
+  }
+
   return (
     <nav className="bg-slate-900/90 border-b border-slate-800 backdrop-blur-md sticky top-0 z-40 px-6 py-3.5 flex items-center justify-between">
       {/* Brand Logo */}
@@ -46,13 +51,23 @@ function Navbar() {
         ))}
       </div>
 
-      {/* Right status badge */}
-      <div className="hidden sm:flex items-center gap-2 text-xs">
-        <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-        <span className="text-slate-400 font-mono text-[11px]">Pipeline Active</span>
+      {/* Right: status + logout */}
+      <div className="hidden sm:flex items-center gap-4 text-xs">
+        <span className="flex items-center gap-2">
+          <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+          <span className="text-slate-400 font-mono text-[11px]">Pipeline Active</span>
+        </span>
+        <button
+          id="navbar-logout"
+          onClick={handleLogout}
+          className="text-slate-400 hover:text-white text-[11px] font-semibold border border-slate-700 hover:border-slate-600 px-3 py-1 rounded-lg transition-colors"
+        >
+          Sign Out
+        </button>
       </div>
     </nav>
   );
 }
 
 export default Navbar;
+

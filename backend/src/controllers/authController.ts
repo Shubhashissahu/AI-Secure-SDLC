@@ -82,6 +82,21 @@ export const login = asyncHandler(async (req: Request, res: Response) => {
         throw new AppError("Invalid credentials", 401);
     }
 
+    // Dev-mode shortcut: if auth is disabled, allow ANY login attempt to succeed
+    // as an admin. This is necessary because the frontend currently only has a
+    // login page, and if the DB is empty, you can't log in at all.
+    if (process.env.DISABLE_AUTH === "true" && process.env.NODE_ENV !== "production") {
+        const token = signToken("dev-user-id", "admin");
+        res.status(200).json({
+            success: true,
+            data: { 
+                token, 
+                user: { id: "dev-user-id", email: parsed.data.email, name: "Dev Admin", role: "admin" } 
+            }
+        });
+        return;
+    }
+
     const user = await User.findOne({ email: parsed.data.email }).select("+passwordHash");
     if (!user) {
         throw new AppError("Invalid credentials", 401);
@@ -115,6 +130,14 @@ export const updateUserRole = asyncHandler(async (req: Request, res: Response) =
     const parsed = updateRoleSchema.safeParse(req.body);
     if (!parsed.success) {
         throw new AppError(`Invalid role payload: ${parsed.error.message}`, 400);
+    }
+
+    // FIX #27: Prevent users from changing their own role.
+    // Without this an admin could accidentally lock themselves out by
+    // demoting themselves, leaving the system with no admins.
+    const authReq = req as any;
+    if (authReq.user?.id && authReq.user.id === req.params.id) {
+        throw new AppError("You cannot change your own role. Ask another admin to do this.", 403);
     }
 
     const user = await User.findByIdAndUpdate(

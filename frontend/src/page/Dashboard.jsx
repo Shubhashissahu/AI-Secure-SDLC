@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback, useRef } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { Link } from "react-router-dom";
 import api, { getCached } from "../services/api";
 import SecurityScoreGauge from "../components/SecurityScoreGauge";
@@ -24,12 +24,7 @@ function Dashboard() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState("");
-  const isFetchingRef = useRef(false);
-
   const loadData = useCallback((signal, isManual = false) => {
-    if (isFetchingRef.current && !isManual) return Promise.resolve();
-    isFetchingRef.current = true;
-
     const fetcher = isManual
       ? api.get("/api/dashboard/stats", { signal }).catch(() => api.get("/api/dashboard", { signal }))
       : getCached("/api/dashboard/stats", { signal }, 5000).catch(() => api.get("/api/dashboard", { signal }));
@@ -46,9 +41,6 @@ function Dashboard() {
         if (err.name === "CanceledError" || err.code === "ERR_CANCELED") return;
         console.error("Failed to load dashboard stats:", err);
         setError("Unable to load live dashboard statistics. Click 'Sync Live DB' or 'Retry' to reload.");
-      })
-      .finally(() => {
-        isFetchingRef.current = false;
       });
   }, []);
 
@@ -59,14 +51,24 @@ function Dashboard() {
   }, [loadData]);
 
   // Auto-refresh every 20s (only when document is visible and not hidden)
+  // FIX #19: Each interval tick creates its own AbortController so requests
+  // from polling can be cancelled. The controller is aborted in the cleanup
+  // function to prevent state updates on unmounted components.
   useEffect(() => {
+    let intervalController = new AbortController();
+
     const interval = setInterval(() => {
       if (document.visibilityState === "visible") {
-        loadData();
+        intervalController.abort(); // cancel any previous in-flight refresh
+        intervalController = new AbortController();
+        loadData(intervalController.signal);
       }
     }, 20000);
 
-    return () => clearInterval(interval);
+    return () => {
+      intervalController.abort();
+      clearInterval(interval);
+    };
   }, [loadData]);
 
   function handleRefresh() {

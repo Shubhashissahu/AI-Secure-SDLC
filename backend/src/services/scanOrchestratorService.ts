@@ -109,38 +109,50 @@ export async function runScanPipeline(scanId: string): Promise<void> {
         safeLog.info(`[IAC - TERRAFORM/K8S]  Found: ${scannerSummary["iac-scanner"]?.found ?? 0} findings`);
         safeLog.info(`[CI/CD - ACTIONS]      Found: ${scannerSummary["cicd-scanner"]?.found ?? 0} findings`);
 
-        // Check if critical scanner failed
+        // FIX #7: Only abort the entire pipeline if ALL scanners failed.
+        // If some scanners succeeded, continue with partial results and log
+        // a warning about the failed ones — a transient network error in OSV
+        // should not discard all the SAST and secrets findings.
         const failedScanners = scannerResults.filter((s) => s.status === "failed");
+        const succeededScanners = scannerResults.filter((s) => s.status === "success");
+
         if (failedScanners.length > 0) {
             const failReasons = failedScanners.map((s) => `${s.scanner} (${s.error || "Execution failed"})`).join("; ");
-            safeLog.error(`\n[SCANNER ERROR] Scanner(s) failed execution: ${failReasons}`);
-            scan.status = "failed";
-            scan.gateResult = "fail";
-            scan.completedAt = new Date();
-            await scan.save();
+            if (succeededScanners.length === 0) {
+                // All scanners failed — abort
+                safeLog.error(`\n[SCANNER ERROR] All scanners failed: ${failReasons}`);
+                scan.status = "failed";
+                scan.gateResult = "fail";
+                scan.completedAt = new Date();
+                await scan.save();
 
-            const durationMs = Date.now() - pipelineStart;
-            safeLog.info(`\n[FAILED] Gate Result: FAIL (Scanner Error) — ${durationMs}ms`);
-            safeLog.info(`${"=".repeat(60)}\n`);
+                const durationMs = Date.now() - pipelineStart;
+                safeLog.info(`\n[FAILED] Gate Result: FAIL (All Scanners Error) — ${durationMs}ms`);
+                safeLog.info(`${"=".repeat(60)}\n`);
 
-            if (ghService && repository.owner && repository.name) {
-                await ghService.createCommitStatus(
-                    repository.owner,
-                    repository.name,
-                    scan.commitSha,
-                    "failure",
-                    `Security Scan Failed: ${failReasons}`.slice(0, 140)
-                );
-                if (scan.prNumber) {
-                    await ghService.commentOnPR(
+                if (ghService && repository.owner && repository.name) {
+                    await ghService.createCommitStatus(
                         repository.owner,
                         repository.name,
-                        scan.prNumber,
-                        `### ❌ Security Scan Pipeline Error\n\nScanner execution failed: ${failReasons}`
+                        scan.commitSha,
+                        "failure",
+                        `Security Scan Failed: ${failReasons}`.slice(0, 140)
                     );
+                    if (scan.prNumber) {
+                        await ghService.commentOnPR(
+                            repository.owner,
+                            repository.name,
+                            scan.prNumber,
+                            `### ❌ Security Scan Pipeline Error\n\nAll scanners failed: ${failReasons}`
+                        );
+                    }
                 }
+                return;
+            } else {
+                // Partial failure — log warning and continue with available results
+                safeLog.warn(`\n[SCANNER WARNING] ${failedScanners.length} scanner(s) failed (partial results): ${failReasons}`);
+                safeLog.warn(`[SCANNER WARNING] Continuing pipeline with ${succeededScanners.length} successful scanner(s).`);
             }
-            return;
         }
 
         // ── Validate findings accuracy: File, Line, and Code existence checks ──

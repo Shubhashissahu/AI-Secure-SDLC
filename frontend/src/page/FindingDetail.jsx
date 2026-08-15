@@ -77,13 +77,6 @@ function FindingDetail() {
     }
   }
 
-  function handleCopyPatch() {
-    if (finding?.ai?.remediation?.patch) {
-      navigator.clipboard.writeText(finding.ai.remediation.patch);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    }
-  }
 
   if (loading) {
     return (
