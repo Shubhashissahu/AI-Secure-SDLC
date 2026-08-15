@@ -55,7 +55,11 @@ app.use("/api/webhook", express.raw({ type: "application/json", limit: "2mb" }),
 // JSON parsing for all other routes.
 app.use(express.json({ limit: "2mb" }));
 
-// ---- Health check ----
+// ---- Health checks & Root ----
+app.get("/", (_req: Request, res: Response) => {
+  res.status(200).json({ status: "ok", message: "SecureFlow API is running" });
+});
+
 app.get("/health", (_req: Request, res: Response) => {
   res.status(200).json({ status: "ok", service: "secureflow-backend" });
 });
