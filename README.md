@@ -1,6 +1,7 @@
 # AI Secure SDLC
 
 ## Table of Contents
+
 - [Project Overview](#project-overview)
 - [Implementation Details](#implementation-details)
 - [Development Guide](#development-guide)
@@ -10,6 +11,7 @@
 ---
 
 <a name="project-overview"></a>
+
 # Project Overview
 
 **An intelligent, production-ready security code review platform that integrates AI-powered vulnerability analysis with your GitHub workflows.**
@@ -90,11 +92,13 @@ AI Secure SDLC automates security code review by combining:
 ## Features
 
 ### Security Scanning
+
 - **Semgrep**: Static application security testing (SAST)
 - **Gitleaks**: Detect exposed secrets, API keys, credentials
 - **Trivy**: Scan dependencies and container images for vulnerabilities
 
 ### AI-Powered Review
+
 - Validates scanner findings with LLM
 - Assesses real-world exploitability
 - Suggests code patches and remediations
@@ -102,18 +106,21 @@ AI Secure SDLC automates security code review by combining:
 - Maps to CWE and OWASP standards
 
 ### Risk Scoring (0-100)
+
 - **Severity** (40%): critical, high, medium, low
 - **Exploitability** (30%): likelihood of successful exploitation
 - **Business Impact** (20%): potential damage to business
 - **Exposure** (10%): user-facing vs. internal-only
 
 ### GitHub Integration
+
 - Webhook-triggered security gates
 - Pull request status checks
 - Inline comments with findings and remediation
 - Block merging based on policy (critical/high findings)
 
 ### Dashboard
+
 - Real-time scan results
 - Finding details with AI analysis
 - Risk scoring visualization
@@ -122,6 +129,7 @@ AI Secure SDLC automates security code review by combining:
 ## Quick Start
 
 ### Prerequisites
+
 - Node.js 18+
 - Docker & Docker Compose (optional)
 - MongoDB 6+ (or use Docker)
@@ -138,7 +146,7 @@ cd ai-secure-sdlc
 cd backend
 npm install
 
-# Frontend  
+# Frontend
 cd ../frontend
 npm install
 ```
@@ -151,6 +159,7 @@ cp .env.example .env
 ```
 
 **Required:**
+
 - `MONGO_URI` - MongoDB connection
 - `GITHUB_TOKEN` - GitHub PAT
 - `GITHUB_WEBHOOK_SECRET` - Webhook secret (32+ chars)
@@ -159,16 +168,19 @@ cp .env.example .env
 ### 3. Start Services
 
 #### Option A: Docker Compose (Recommended)
+
 ```bash
 docker-compose up -d
 ```
 
 Visit:
+
 - **Frontend**: http://localhost:5173
 - **Backend**: http://localhost:4000/health
 - **MongoDB**: mongodb://admin:admin@localhost:27017
 
 #### Option B: Manual Development
+
 ```bash
 # Terminal 1: Backend
 cd backend
@@ -216,22 +228,26 @@ Response includes `webhookSecret` — save it for GitHub setup.
 ## API Endpoints
 
 ### Scans
+
 - `POST /api/scans` - Create scan
 - `GET /api/scans` - List scans
 - `GET /api/scans/:id` - Get scan details
 - `GET /api/scans/:id/status` - Get minimal status (CI polling)
 
 ### Findings
+
 - `GET /api/findings` - List findings (filter by scanId, severity, status)
 - `GET /api/findings/:id` - Get finding details
 - `PATCH /api/findings/:id` - Update status (false_positive, confirmed, etc.)
 
 ### Repositories
+
 - `POST /api/repositories` - Register repository
 - `GET /api/repositories` - List repositories
 - `GET /api/repositories/:id` - Get repository details
 
 ### Webhooks
+
 - `POST /api/webhook/github` - GitHub PR event handler
 
 ## Configuration
@@ -239,6 +255,7 @@ Response includes `webhookSecret` — save it for GitHub setup.
 ### Scan Policy
 
 Set in database for each repository:
+
 ```javascript
 {
   policyConfig: {
@@ -253,6 +270,7 @@ Set in database for each repository:
 ### AI Provider
 
 Support for multiple LLM providers via `AI_PROVIDER` env var:
+
 - `openai` (default) - GPT-4, GPT-3.5
 - `anthropic` - Claude 3 Sonnet
 - `local` - Ollama, LM Studio (basic support)
@@ -316,6 +334,7 @@ ai-secure-sdlc/
 ### Customizing Risk Scoring
 
 Edit `riskService.ts:calculateRiskScore()` weights:
+
 - Severity: 40% (default)
 - Exploitability: 30%
 - Business Impact: 20%
@@ -324,17 +343,20 @@ Edit `riskService.ts:calculateRiskScore()` weights:
 ## Security Considerations
 
 ### Secrets Protection
+
 - Never stores raw secrets (database compromise won't leak them)
 - Uses `secretRef` (hashed reference) for deduplication
 - Gitleaks scans restricted to hash-only storage
 
 ### Authentication
+
 - GitHub webhook signature verification (HMAC-SHA256)
 - Rate limiting enabled by default
 - Helmet security headers
 - CORS restricted to frontend origin
 
 ### Data Sensitivity
+
 - No stack traces in production errors
 - Secrets never logged
 - Consider encrypting findings at rest
@@ -363,16 +385,19 @@ Edit `riskService.ts:calculateRiskScore()` weights:
 ## Cost Estimation
 
 ### API Calls
+
 - OpenAI: ~$0.01-0.05 per PR (depending on code size)
 - Anthropic: Similar
 - GitHub: Free (included)
 
 ### Infrastructure
+
 - MongoDB: $57+/month (Atlas M0 free tier available)
 - Compute: $10-50+/month (depends on load)
 - Data transfer: Minimal
 
 Optimize costs with:
+
 - Batch AI reviews
 - Cache scanner results
 - Implement rate limiting per repository
@@ -403,6 +428,7 @@ Optimize costs with:
 ## Contributing
 
 Contributions welcome! Please:
+
 1. Fork repository
 2. Create feature branch
 3. Add tests
@@ -445,8 +471,8 @@ MIT License - see [LICENSE](LICENSE) file
 
 ---
 
-
 <a name="implementation-details"></a>
+
 # Implementation Details
 
 ### Project Completion Status
@@ -460,6 +486,7 @@ MIT License - see [LICENSE](LICENSE) file
 #### 1. Backend API (Node.js + TypeScript + Express)
 
 ##### Core Services
+
 - **GitHubService** - PR comments, check runs, webhook management
 - **AIService** - LLM-powered vulnerability analysis (OpenAI/Anthropic/local support)
 - **SemgrepService** - SAST scanning integration
@@ -469,6 +496,7 @@ MIT License - see [LICENSE](LICENSE) file
 - **ReportService** - Scan reports in JSON and SARIF formats
 
 ##### API Endpoints (19 total)
+
 - **Health Check**: GET /health
 - **Scans** (4): POST, GET, GET/:id, GET/:id/status
 - **Findings** (3): GET, GET/:id, PATCH/:id
@@ -476,12 +504,14 @@ MIT License - see [LICENSE](LICENSE) file
 - **Webhooks** (1): POST /webhook/github
 
 ##### Database (MongoDB)
+
 - Scan collection with indexes for CI polling efficiency
 - Finding collection with AI review & risk data
 - Repository collection with scan policies
 - All sensitive data protected (secrets stored as hashes only)
 
 ##### Security Features
+
 - HMAC-SHA256 webhook signature verification
 - Rate limiting (100 req/15min)
 - Helmet security headers
@@ -493,6 +523,7 @@ MIT License - see [LICENSE](LICENSE) file
 #### 2. Frontend Dashboard (React + Vite + Tailwind CSS)
 
 ##### Pages
+
 - **Dashboard** - Main landing page with:
   - Recent scans sidebar
   - Scan summary with severity breakdown
@@ -500,6 +531,7 @@ MIT License - see [LICENSE](LICENSE) file
   - Real-time finding list
 
 ##### Components
+
 - **SeverityBadge** - Color-coded severity indicators (critical/high/medium/low)
 - **ScanResultsCard** - Expandable finding cards with:
   - Code snippets
@@ -509,6 +541,7 @@ MIT License - see [LICENSE](LICENSE) file
   - Remediation suggestions
 
 ##### Features
+
 - Real-time API integration
 - Responsive design (mobile-first)
 - Error handling and loading states
@@ -518,18 +551,21 @@ MIT License - see [LICENSE](LICENSE) file
 #### 3. GitHub Integration
 
 ##### Webhook Handler
+
 - Receives PR events (opened, synchronize)
 - Orchestrates scan pipeline
 - Posts PR comments with findings
 - Creates check run status
 
 ##### GitHub Actions Workflow
+
 - Runs Semgrep, Gitleaks, Trivy in parallel
 - Uploads scanner reports
 - Triggers webhook with PR context
 - Polls scan status (CI gate)
 
 ##### GitHub Features
+
 - Automatic PR status checks
 - Inline PR comments with remediation
 - Security gate enforcement
@@ -538,6 +574,7 @@ MIT License - see [LICENSE](LICENSE) file
 #### 4. AI-Powered Review
 
 ##### LLM Integration
+
 - Validates scanner findings against false positives
 - Assesses exploitability and real-world risk
 - Suggests code patches with explanations
@@ -545,11 +582,13 @@ MIT License - see [LICENSE](LICENSE) file
 - Provides confidence scores (0-100%)
 
 ##### Supported Providers
+
 - OpenAI (GPT-4, GPT-3.5-turbo)
 - Anthropic (Claude 3)
 - Local models (Ollama, LM Studio)
 
 ##### Features
+
 - Batch processing support
 - Structured JSON responses
 - Context-aware prompts (PR title, description)
@@ -558,20 +597,23 @@ MIT License - see [LICENSE](LICENSE) file
 #### 5. Risk Scoring Engine
 
 ##### Multi-Factor Risk Model
+
 ```
-Risk Score = (Severity × 0.4) + (Exploitability × 0.3) + 
+Risk Score = (Severity × 0.4) + (Exploitability × 0.3) +
              (Business Impact × 0.2) + (Exposure × 0.1)
 
 Result: 0-100 scale
 ```
 
 ##### Severity Mapping
+
 - Critical: 100
 - High: 75
 - Medium: 50
 - Low: 25
 
 ##### Policy Enforcement
+
 - Block PRs with critical findings
 - Block PRs with excessive high findings
 - Configurable thresholds per repository
@@ -580,11 +622,13 @@ Result: 0-100 scale
 #### 6. Docker & Containerization
 
 ##### Multi-Stage Builds
+
 - **Backend**: Node → TypeScript compilation → Production-only deps
 - **Frontend**: Node → Vite build → Nginx serving
 - **Database**: MongoDB 7.0 with persistence
 
 ##### Docker Compose Setup
+
 - 3 services (backend, frontend, mongodb)
 - Health checks on all containers
 - Environment variable management
@@ -593,6 +637,7 @@ Result: 0-100 scale
 - Resource limits available
 
 ##### Production Readiness
+
 - Non-root user execution
 - Minimal image sizes
 - Security scanning integration
@@ -601,18 +646,21 @@ Result: 0-100 scale
 #### 7. Security Infrastructure
 
 ##### Secret Handling
+
 - Never stores raw secrets in database
 - Uses secure hashing (SHA-256) for references
 - Gitleaks scans for exposed credentials
 - Safe secret_ref field (max 16 chars)
 
 ##### Scanning Tools
+
 - **Semgrep**: 500+ security rules, OWASP coverage
 - **Gitleaks**: 140+ secret patterns
 - **Trivy**: 200k+ known vulnerabilities
 - Pluggable architecture for new scanners
 
 ##### Vulnerability Management
+
 - 6-stage severity scale
 - Exploit scenario documentation
 - Remediation suggestions with code samples
@@ -622,6 +670,7 @@ Result: 0-100 scale
 #### 8. Comprehensive Documentation
 
 ##### Files Created
+
 - **README.md** (800+ lines) - Setup, features, architecture
 - **DEVELOPMENT.md** (400+ lines) - Dev guide, extending platform
 - **API.md** (600+ lines) - Complete API reference with examples
@@ -630,6 +679,7 @@ Result: 0-100 scale
 - **.env.example** - All configuration options documented
 
 ##### Documentation Coverage
+
 - Quick start guide
 - Architecture diagrams (ASCII)
 - API endpoint documentation with curl examples
@@ -691,18 +741,21 @@ ai-secure-sdlc/
 ### Key Metrics
 
 #### Code Quality
+
 - **TypeScript**: 100% backend type safety
 - **Validation**: Zod schemas for all inputs
 - **Error Handling**: Centralized error middleware
 - **Security**: Helmet, CORS, rate limiting, HMAC verification
 
 #### Performance
+
 - **Database Indexes**: Optimized for CI polling (hot read path)
 - **Caching**: Ready for Redis integration
 - **Pagination**: Supported (200 results default)
 - **Async Processing**: Webhook processing is non-blocking
 
 #### Scalability
+
 - **Horizontal Scaling**: Stateless API design
 - **Database**: MongoDB replica sets supported
 - **Load Balancing**: API endpoints stateless
@@ -713,6 +766,7 @@ ai-secure-sdlc/
 ### Technology Stack
 
 #### Backend
+
 - **Runtime**: Node.js 20
 - **Language**: TypeScript 5.5
 - **Framework**: Express 4.19
@@ -724,6 +778,7 @@ ai-secure-sdlc/
 - **Rate Limiting**: express-rate-limit 7.4
 
 #### Frontend
+
 - **Framework**: React 18.3
 - **Build Tool**: Vite 5.3
 - **Styling**: Tailwind CSS 3.4
@@ -732,6 +787,7 @@ ai-secure-sdlc/
 - **HTTP Client**: Axios 1.7
 
 #### DevOps
+
 - **Containerization**: Docker & Docker Compose
 - **CI/CD**: GitHub Actions
 - **Version Control**: Git
@@ -741,6 +797,7 @@ ai-secure-sdlc/
 ### Features Implemented
 
 #### ✅ Complete Features
+
 - [x] Multi-scanner integration (Semgrep, Gitleaks, Trivy)
 - [x] AI-powered vulnerability review
 - [x] Risk scoring with multi-factor model
@@ -760,6 +817,7 @@ ai-secure-sdlc/
 - [x] CORS support
 
 #### 🔄 Future Enhancements
+
 - [ ] User authentication (OAuth2)
 - [ ] RBAC (Role-Based Access Control)
 - [ ] Slack/Teams notifications
@@ -778,6 +836,7 @@ ai-secure-sdlc/
 ### Getting Started
 
 #### 1. Quickstart (Docker)
+
 ```bash
 git clone <repo>
 cd ai-secure-sdlc
@@ -787,11 +846,13 @@ docker-compose up -d
 ```
 
 Visit:
+
 - Frontend: http://localhost:5173
 - Backend: http://localhost:4000/health
 - MongoDB: mongodb://admin:admin@localhost:27017
 
 #### 2. Register Repository
+
 ```bash
 curl -X POST http://localhost:4000/api/repositories \
   -H "Content-Type: application/json" \
@@ -801,12 +862,14 @@ curl -X POST http://localhost:4000/api/repositories \
 Save the `webhookSecret`.
 
 #### 3. GitHub Webhook
+
 1. Repo Settings → Webhooks → Add webhook
 2. URL: `https://<your-domain>/api/webhook/github`
 3. Secret: Use the `webhookSecret` from step 2
 4. Events: Pull requests
 
 #### 4. Trigger Scan
+
 Create a PR in your repository → workflow runs → webhook triggered → see results in dashboard.
 
 ---
@@ -814,6 +877,7 @@ Create a PR in your repository → workflow runs → webhook triggered → see r
 ### Production Deployment
 
 #### Pre-Flight Checklist
+
 - [ ] `NODE_ENV=production`
 - [ ] Real MongoDB (Atlas, RDS, etc.)
 - [ ] HTTPS/TLS enabled
@@ -826,6 +890,7 @@ Create a PR in your repository → workflow runs → webhook triggered → see r
 - [ ] Security audit passed
 
 #### Deployment Options
+
 1. **Docker Compose** - Single server
 2. **AWS ECS** - Container orchestration
 3. **Kubernetes** - Enterprise scale
@@ -839,6 +904,7 @@ See [DEPLOYMENT.md](DEPLOYMENT.md) for detailed instructions.
 ### Testing & QA
 
 #### Backend Testing
+
 ```bash
 cd backend
 npm test                    # Run all tests
@@ -847,12 +913,14 @@ npm test -- --coverage    # Coverage report
 ```
 
 #### Frontend Testing
+
 ```bash
 cd frontend
 npm test                    # Run tests
 ```
 
 #### Manual Testing
+
 1. Create test PR in GitHub
 2. Verify webhook triggered
 3. Check dashboard for results
@@ -865,11 +933,13 @@ npm test                    # Run tests
 ### Cost Estimation
 
 #### Monthly Infrastructure
+
 - **MongoDB Atlas M0**: Free
 - **Compute (1 instance)**: $10-50
 - **Data Transfer**: Minimal
 
 #### API Calls
+
 - **OpenAI**: ~$0.01-0.05 per PR
 - **GitHub**: Free (included)
 - **Semgrep**: Free (open source)
@@ -881,6 +951,7 @@ npm test                    # Run tests
 ### Support & Contribution
 
 #### Report Issues
+
 1. Check [DEPLOYMENT.md troubleshooting](DEPLOYMENT.md#troubleshooting)
 2. Search existing GitHub Issues
 3. Create detailed issue with:
@@ -890,12 +961,14 @@ npm test                    # Run tests
    - Logs/screenshots
 
 #### Contribute
+
 1. Fork repository
 2. Create feature branch
 3. Add tests
 4. Submit PR
 
 #### Get Help
+
 - 📚 **Docs**: README, DEVELOPMENT, API, DEPLOYMENT
 - 💬 **Issues**: GitHub Issues
 - 📧 **Email**: support@your-domain.com
@@ -905,9 +978,11 @@ npm test                    # Run tests
 ### License & Acknowledgments
 
 #### License
+
 MIT License - See LICENSE file for details
 
 #### Acknowledgments
+
 - Semgrep for SAST rules
 - Gitleaks for secret patterns
 - Trivy for vulnerability database
@@ -956,8 +1031,8 @@ This is a complete, production-ready implementation of an intelligent security c
 
 ---
 
-
 <a name="development-guide"></a>
+
 # Development Guide
 
 This guide helps developers extend, customize, and contribute to the AI Secure SDLC platform.
@@ -997,6 +1072,7 @@ npm test
 ```
 
 **Key files:**
+
 - `src/server.ts` - Express app setup
 - `src/models/` - Mongoose schemas
 - `src/controllers/` - Request handlers
@@ -1025,6 +1101,7 @@ npm run lint
 ```
 
 **Key files:**
+
 - `src/App.jsx` - Main app component
 - `src/page/Dashboard.jsx` - Dashboard page
 - `src/components/` - Reusable components
@@ -1075,6 +1152,7 @@ Frontend: Fetch and display results
 #### Data Models
 
 ##### Scan
+
 - Represents a single PR security scan
 - Tracks overall status (pending → scanning → ai_review → completed)
 - Stores finding counts and gate result
@@ -1097,6 +1175,7 @@ interface IScan {
 ```
 
 ##### Finding
+
 - Individual vulnerability found by a scanner
 - Includes AI review and risk assessment
 - Updateable status (false_positive, confirmed, remediated)
@@ -1130,6 +1209,7 @@ interface IFinding {
 ```
 
 ##### Repository
+
 - Registered GitHub repository
 - Contains scan config and security policy
 
@@ -1146,7 +1226,9 @@ export class NewScannerService {
     // Return findings
   }
 
-  static mapSeverity(scannerSeverity: string): "critical" | "high" | "medium" | "low" {
+  static mapSeverity(
+    scannerSeverity: string,
+  ): "critical" | "high" | "medium" | "low" {
     // Convert scanner severity to unified format
   }
 }
@@ -1219,9 +1301,9 @@ Edit the `AIReviewResult` interface and parsing:
 ```typescript
 export interface AIReviewResult {
   // ...existing fields...
-  cvssScore: number;           // NEW
-  proofOfConcept: string;     // NEW
-  affectedUsers: number;      // NEW
+  cvssScore: number; // NEW
+  proofOfConcept: string; // NEW
+  affectedUsers: number; // NEW
 }
 ```
 
@@ -1237,7 +1319,9 @@ describe("AIService", () => {
   it("should review a finding", async () => {
     const service = new AIService(process.env.AI_API_KEY);
     const result = await service.reviewFinding({
-      finding: { /* test data */ }
+      finding: {
+        /* test data */
+      },
     });
     expect(result.isRealVulnerability).toBeDefined();
   });
@@ -1262,6 +1346,7 @@ static calculateRiskScore(factors: RiskFactors): RiskScore {
 ```
 
 To change weights:
+
 ```typescript
 // Example: emphasize exploitability
 const severityScore = ... * 0.3;           // 30%
@@ -1275,8 +1360,8 @@ const exposureScore = ... * 0.1;          // 10%
 ```typescript
 export interface RiskFactors {
   // ...existing...
-  timeToExploit: "minutes" | "hours" | "days";  // NEW
-  detectability: "easy" | "medium" | "hard";    // NEW
+  timeToExploit: "minutes" | "hours" | "days"; // NEW
+  detectability: "easy" | "medium" | "hard"; // NEW
 }
 ```
 
@@ -1304,14 +1389,12 @@ import app from "../src/server";
 
 describe("POST /api/scans", () => {
   it("should create a scan", async () => {
-    const response = await request(app)
-      .post("/api/scans")
-      .send({
-        repositoryId: "...",
-        prNumber: 123,
-        commitSha: "abc123...",
-        triggeredBy: "github-actions"
-      });
+    const response = await request(app).post("/api/scans").send({
+      repositoryId: "...",
+      prNumber: 123,
+      commitSha: "abc123...",
+      triggeredBy: "github-actions",
+    });
 
     expect(response.status).toBe(201);
     expect(response.body.data._id).toBeDefined();
@@ -1430,7 +1513,7 @@ Process multiple findings in parallel:
 
 ```typescript
 const results = await Promise.all(
-  findings.map(f => aiService.reviewFinding(f))
+  findings.map((f) => aiService.reviewFinding(f)),
 );
 ```
 
@@ -1468,6 +1551,7 @@ const findings = await Finding.find(filter)
 ### Support
 
 Questions or issues? Open a GitHub issue with:
+
 - Description of the problem
 - Steps to reproduce
 - Expected vs. actual behavior
@@ -1475,8 +1559,8 @@ Questions or issues? Open a GitHub issue with:
 
 ---
 
-
 <a name="deployment-troubleshooting"></a>
+
 # Deployment & Troubleshooting
 
 ### Deployment
@@ -1594,35 +1678,36 @@ spec:
         app: ai-secure-backend
     spec:
       containers:
-      - name: backend
-        image: my-registry/ai-secure-backend:latest
-        ports:
-        - containerPort: 4000
-        env:
-        - name: MONGO_URI
-          valueFrom:
-            secretKeyRef:
-              name: ai-secure-secrets
-              key: mongo-uri
-        - name: GITHUB_TOKEN
-          valueFrom:
-            secretKeyRef:
-              name: ai-secure-secrets
-              key: github-token
-        - name: AI_API_KEY
-          valueFrom:
-            secretKeyRef:
-              name: ai-secure-secrets
-              key: ai-api-key
-        livenessProbe:
-          httpGet:
-            path: /health
-            port: 4000
-          initialDelaySeconds: 30
-          periodSeconds: 10
+        - name: backend
+          image: my-registry/ai-secure-backend:latest
+          ports:
+            - containerPort: 4000
+          env:
+            - name: MONGO_URI
+              valueFrom:
+                secretKeyRef:
+                  name: ai-secure-secrets
+                  key: mongo-uri
+            - name: GITHUB_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: ai-secure-secrets
+                  key: github-token
+            - name: AI_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: ai-secure-secrets
+                  key: ai-api-key
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 4000
+            initialDelaySeconds: 30
+            periodSeconds: 10
 ```
 
 Deploy:
+
 ```bash
 kubectl apply -f backend-deployment.yaml
 kubectl apply -f frontend-deployment.yaml
@@ -1676,6 +1761,7 @@ echo $GITHUB_TOKEN
 ##### Rate Limiting Too Strict
 
 Edit `RATE_LIMIT_MAX` in `.env`:
+
 ```env
 RATE_LIMIT_MAX=500        # Increase from default 100
 RATE_LIMIT_WINDOW_MS=900000  # 15 minutes
@@ -1711,6 +1797,7 @@ npm run dev -- --port 5174
 ##### Components Not Rendering
 
 Check browser console for errors:
+
 - Missing dependencies (recharts, axios, react-router-dom)
 - API errors (check Network tab)
 - CSS/Tailwind issues
@@ -1771,6 +1858,7 @@ curl https://api.anthropic.com/v1/messages \
 ##### High API Costs
 
 Optimization strategies:
+
 - Cache AI review results
 - Batch multiple findings in one request
 - Use cheaper models
@@ -1793,16 +1881,17 @@ db.scans.deleteMany({ createdAt: { $lt: new Date("2023-01-01") } })
 
 ```javascript
 // Check query performance
-db.scans.find().explain("executionStats")
+db.scans.find().explain("executionStats");
 
 // Add missing indexes
-db.scans.createIndex({ repositoryId: 1, prNumber: 1, commitSha: 1 })
-db.findings.createIndex({ scanId: 1, severity: 1 })
+db.scans.createIndex({ repositoryId: 1, prNumber: 1, commitSha: 1 });
+db.findings.createIndex({ scanId: 1, severity: 1 });
 ```
 
 ##### Connection Pool Exhausted
 
 Increase connection pool in `MONGO_URI`:
+
 ```
 mongodb://user:pass@host:27017/db?maxPoolSize=50
 ```
@@ -1853,8 +1942,8 @@ const logger = winston.createLogger({
   format: winston.format.json(),
   transports: [
     new winston.transports.File({ filename: "error.log", level: "error" }),
-    new winston.transports.File({ filename: "combined.log" })
-  ]
+    new winston.transports.File({ filename: "combined.log" }),
+  ],
 });
 
 logger.info("Scan initiated", { scanId, prNumber });
@@ -2001,8 +2090,8 @@ docker pull nginx:1.25-alpine
 
 ---
 
-
 <a name="api-reference"></a>
+
 # API Reference
 
 Complete API reference for the AI Secure SDLC platform.
@@ -2018,6 +2107,7 @@ Production: `https://api.your-domain.com/api`
 ### Authentication
 
 Currently, all endpoints are unauthenticated. Future versions will support:
+
 - JWT Bearer tokens
 - GitHub OAuth
 - API keys
@@ -2037,6 +2127,7 @@ Currently, all endpoints are unauthenticated. Future versions will support:
 Check if the backend is running.
 
 **Response:**
+
 ```json
 {
   "status": "ok",
@@ -2053,6 +2144,7 @@ Check if the backend is running.
 Create a new security scan.
 
 **Request:**
+
 ```bash
 curl -X POST http://localhost:4000/api/scans \
   -H "Content-Type: application/json" \
@@ -2073,6 +2165,7 @@ curl -X POST http://localhost:4000/api/scans \
 | `triggeredBy` | string | Yes | Who triggered the scan |
 
 **Response (201):**
+
 ```json
 {
   "success": true,
@@ -2097,6 +2190,7 @@ curl -X POST http://localhost:4000/api/scans \
 ```
 
 **Errors:**
+
 - `400` - Invalid payload
 - `404` - Repository not found
 
@@ -2107,6 +2201,7 @@ curl -X POST http://localhost:4000/api/scans \
 List all scans, optionally filtered by repository.
 
 **Request:**
+
 ```bash
 ## List all scans
 curl http://localhost:4000/api/scans
@@ -2121,6 +2216,7 @@ curl http://localhost:4000/api/scans?repositoryId=507f1f77bcf86cd799439011
 | `repositoryId` | ObjectId | Yes | Filter by repository |
 
 **Response (200):**
+
 ```json
 {
   "success": true,
@@ -2154,11 +2250,13 @@ curl http://localhost:4000/api/scans?repositoryId=507f1f77bcf86cd799439011
 Get detailed information about a specific scan.
 
 **Request:**
+
 ```bash
 curl http://localhost:4000/api/scans/507f1f77bcf86cd799439012
 ```
 
 **Response (200):**
+
 ```json
 {
   "success": true,
@@ -2186,6 +2284,7 @@ curl http://localhost:4000/api/scans/507f1f77bcf86cd799439012
 ```
 
 **Errors:**
+
 - `404` - Scan not found
 
 ---
@@ -2195,11 +2294,13 @@ curl http://localhost:4000/api/scans/507f1f77bcf86cd799439012
 Get minimal scan status (optimized for CI polling).
 
 **Request:**
+
 ```bash
 curl http://localhost:4000/api/scans/507f1f77bcf86cd799439012/status
 ```
 
 **Response (200):**
+
 ```json
 {
   "success": true,
@@ -2226,6 +2327,7 @@ curl http://localhost:4000/api/scans/507f1f77bcf86cd799439012/status
 List findings with optional filtering.
 
 **Request:**
+
 ```bash
 ## All findings
 curl http://localhost:4000/api/findings
@@ -2255,6 +2357,7 @@ curl "http://localhost:4000/api/findings?scanId=507f1f77bcf86cd799439012&severit
 | `status` | string | Yes | open, false_positive, confirmed, remediated |
 
 **Response (200):**
+
 ```json
 {
   "success": true,
@@ -2303,11 +2406,13 @@ curl "http://localhost:4000/api/findings?scanId=507f1f77bcf86cd799439012&severit
 Get detailed information about a specific finding.
 
 **Request:**
+
 ```bash
 curl http://localhost:4000/api/findings/507f1f77bcf86cd799439013
 ```
 
 **Response (200):**
+
 ```json
 {
   "success": true,
@@ -2347,6 +2452,7 @@ curl http://localhost:4000/api/findings/507f1f77bcf86cd799439013
 ```
 
 **Errors:**
+
 - `404` - Finding not found
 
 ---
@@ -2356,6 +2462,7 @@ curl http://localhost:4000/api/findings/507f1f77bcf86cd799439013
 Update finding status.
 
 **Request:**
+
 ```bash
 curl -X PATCH http://localhost:4000/api/findings/507f1f77bcf86cd799439013 \
   -H "Content-Type: application/json" \
@@ -2368,6 +2475,7 @@ curl -X PATCH http://localhost:4000/api/findings/507f1f77bcf86cd799439013 \
 | `status` | string | Yes | open, false_positive, confirmed, remediated |
 
 **Response (200):**
+
 ```json
 {
   "success": true,
@@ -2380,6 +2488,7 @@ curl -X PATCH http://localhost:4000/api/findings/507f1f77bcf86cd799439013 \
 ```
 
 **Errors:**
+
 - `400` - Invalid status value
 - `404` - Finding not found
 
@@ -2392,6 +2501,7 @@ curl -X PATCH http://localhost:4000/api/findings/507f1f77bcf86cd799439013 \
 Register a new repository for security scanning.
 
 **Request:**
+
 ```bash
 curl -X POST http://localhost:4000/api/repositories \
   -H "Content-Type: application/json" \
@@ -2412,6 +2522,7 @@ curl -X POST http://localhost:4000/api/repositories \
 | `defaultBranch` | string | No | Default: "main" |
 
 **Response (201):**
+
 ```json
 {
   "success": true,
@@ -2429,6 +2540,7 @@ curl -X POST http://localhost:4000/api/repositories \
 **Important:** Save the `webhookSecret` immediately — it's only returned once!
 
 **Errors:**
+
 - `400` - Invalid payload
 - `409` - Repository already registered
 
@@ -2439,11 +2551,13 @@ curl -X POST http://localhost:4000/api/repositories \
 List all registered repositories.
 
 **Request:**
+
 ```bash
 curl http://localhost:4000/api/repositories
 ```
 
 **Response (200):**
+
 ```json
 {
   "success": true,
@@ -2480,11 +2594,13 @@ curl http://localhost:4000/api/repositories
 Get details about a specific repository.
 
 **Request:**
+
 ```bash
 curl http://localhost:4000/api/repositories/507f1f77bcf86cd799439014
 ```
 
 **Response (200):**
+
 ```json
 {
   "success": true,
@@ -2511,6 +2627,7 @@ curl http://localhost:4000/api/repositories/507f1f77bcf86cd799439014
 ```
 
 **Errors:**
+
 - `404` - Repository not found
 
 ---
@@ -2522,12 +2639,14 @@ curl http://localhost:4000/api/repositories/507f1f77bcf86cd799439014
 GitHub webhook endpoint for PR events.
 
 **Headers (sent by GitHub):**
+
 ```
 X-Hub-Signature-256: sha256=...
 X-GitHub-Event: pull_request
 ```
 
 **Request Body (GitHub sends):**
+
 ```json
 {
   "action": "opened",
@@ -2551,6 +2670,7 @@ X-GitHub-Event: pull_request
 ```
 
 **Response (202):**
+
 ```json
 {
   "success": true,
@@ -2562,6 +2682,7 @@ X-GitHub-Event: pull_request
 Processing happens asynchronously. Check `/api/scans/:scanId/status` for progress.
 
 **Errors:**
+
 - `400` - Invalid payload
 - `401` - Invalid signature
 - `404` - Repository not registered
@@ -2632,7 +2753,7 @@ Used throughout this documentation.
 import axios from "axios";
 
 const api = axios.create({
-  baseURL: "http://localhost:4000/api"
+  baseURL: "http://localhost:4000/api",
 });
 
 // List scans
@@ -2643,7 +2764,7 @@ const newScan = await api.post("/scans", {
   repositoryId: "...",
   prNumber: 42,
   commitSha: "abc123...",
-  triggeredBy: "github-actions"
+  triggeredBy: "github-actions",
 });
 ```
 
@@ -2671,4 +2792,3 @@ scan = api.get(f"/scans/{scan_id}").json()
 3. [GitHub Integration Setup](README.md#5-create-github-webhook)
 
 ---
-
