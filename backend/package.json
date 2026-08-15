@@ -1,5 +1,5 @@
 {
-  "name": "ai-secure-sdlc-backend",
+  "name": "secureflow-backend",
   "version": "0.1.0",
   "description": "Backend API for the AI-assisted Secure SDLC platform",
   "main": "dist/server.js",

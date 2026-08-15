@@ -4,7 +4,7 @@ services:
   # MongoDB database
   mongodb:
     image: mongo:7.0
-    container_name: ai-secure-sdlc-db
+    container_name: secureflow-db
     environment:
       MONGO_INITDB_ROOT_USERNAME: ${MONGO_ROOT_USER:-admin}
       MONGO_INITDB_ROOT_PASSWORD: ${MONGO_ROOT_PASSWORD:-admin}
@@ -23,7 +23,7 @@ services:
   # Redis queue cache for BullMQ
   redis:
     image: redis:7-alpine
-    container_name: ai-secure-sdlc-redis
+    container_name: secureflow-redis
     ports:
       - "${REDIS_PORT:-6379}:6379"
     healthcheck:
@@ -38,7 +38,7 @@ services:
     build:
       context: ./backend
       dockerfile: Dockerfile
-    container_name: ai-secure-sdlc-backend
+    container_name: secureflow-backend
     depends_on:
       mongodb:
         condition: service_healthy
@@ -79,7 +79,7 @@ services:
     build:
       context: ./frontend
       dockerfile: Dockerfile
-    container_name: ai-secure-sdlc-frontend
+    container_name: secureflow-frontend
     depends_on:
       - backend
     environment:
@@ -104,4 +104,4 @@ volumes:
 
 networks:
   default:
-    name: ai-secure-sdlc-network
+    name: secureflow-network

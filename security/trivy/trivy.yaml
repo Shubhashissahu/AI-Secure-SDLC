@@ -1,4 +1,4 @@
-# Trivy configuration for AI Secure SDLC
+# Trivy configuration for SecureFlow
 severity:
   - CRITICAL
   - HIGH

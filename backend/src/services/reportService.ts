@@ -189,7 +189,7 @@ export class ReportService {
       }
     }
 
-    lines.push(`\n---`, `*Powered by AI Secure SDLC Platform*`);
+    lines.push(`\n---`, `*Powered by SecureFlow Platform*`);
 
     return lines.join("\n");
   }

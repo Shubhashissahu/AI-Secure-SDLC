@@ -1,4 +1,4 @@
-# Gitleaks configuration for AI Secure SDLC
+# Gitleaks configuration for SecureFlow
 # Explicit rules for API keys, AWS credentials, GitHub tokens, JWT secrets, database passwords, private keys, access tokens
 
 [allowlist]

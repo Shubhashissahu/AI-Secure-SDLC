@@ -1,4 +1,4 @@
-# AI Secure SDLC
+# SecureFlow
 
 ## Table of Contents
 
@@ -24,7 +24,7 @@
 
 ## Overview
 
-AI Secure SDLC automates security code review by combining:
+SecureFlow automates security code review by combining:
 
 - **🔍 Multi-Scanner Integration**: Semgrep (SAST), Gitleaks (secrets), Trivy (dependencies)
 - **🤖 AI-Powered Review**: LLM-based validation of findings with confidence scoring
@@ -49,7 +49,7 @@ AI Secure SDLC automates security code review by combining:
                            │
                            ▼
         ┌──────────────────────────────────────────┐
-        │    AI Secure SDLC Backend (Node.js)      │
+        │    SecureFlow Backend (Node.js)      │
         │                                          │
         ├─ Webhook: /api/webhook/github           │
         ├─ Scans: /api/scans                      │
@@ -140,7 +140,7 @@ AI Secure SDLC automates security code review by combining:
 
 ```bash
 git clone <repository>
-cd ai-secure-sdlc
+cd secureflow
 
 # Backend
 cd backend
@@ -278,7 +278,7 @@ Support for multiple LLM providers via `AI_PROVIDER` env var:
 ## Project Structure
 
 ```
-ai-secure-sdlc/
+secureflow/
 ├── backend/
 │   ├── src/
 │   │   ├── controllers/        # Request handlers
@@ -693,7 +693,7 @@ Result: 0-100 scale
 ### File Structure
 
 ```
-ai-secure-sdlc/
+secureflow/
 ├── backend/                          # Node.js/TypeScript API
 │   ├── src/
 │   │   ├── controllers/              # Request handlers (4 files)
@@ -839,7 +839,7 @@ ai-secure-sdlc/
 
 ```bash
 git clone <repo>
-cd ai-secure-sdlc
+cd secureflow
 cp .env.example .env
 ## Edit .env with your keys
 docker-compose up -d
@@ -1035,7 +1035,7 @@ This is a complete, production-ready implementation of an intelligent security c
 
 # Development Guide
 
-This guide helps developers extend, customize, and contribute to the AI Secure SDLC platform.
+This guide helps developers extend, customize, and contribute to the SecureFlow platform.
 
 ### Table of Contents
 
@@ -1447,10 +1447,10 @@ Using VS Code debugger:
 
 ```bash
 ## Backend logs (if using Docker)
-docker logs ai-secure-sdlc-backend
+docker logs secureflow-backend
 
 ## MongoDB logs
-docker logs ai-secure-sdlc-db
+docker logs secureflow-db
 
 ## View recent scans
 curl http://localhost:4000/api/scans
@@ -1584,7 +1584,7 @@ Questions or issues? Open a GitHub issue with:
 ```bash
 ## 1. Clone repository
 git clone <repo>
-cd ai-secure-sdlc
+cd secureflow
 
 ## 2. Copy and configure .env
 cp .env.example .env
@@ -1751,7 +1751,7 @@ mongodb://[username]:[password]@[host]:[port]/[database]?authSource=admin
 curl http://localhost:4000/health
 
 ## Check logs
-docker logs ai-secure-sdlc-backend
+docker logs secureflow-backend
 
 ## Verify environment variables
 echo $MONGO_URI
@@ -1813,7 +1813,7 @@ Check browser console for errors:
 
 ```bash
 ## View backend logs
-docker logs ai-secure-sdlc-backend -f
+docker logs secureflow-backend -f
 
 ## Look for webhook errors
 grep -i "webhook\|signature" logs.txt
@@ -1871,7 +1871,7 @@ Optimization strategies:
 
 ```bash
 ## Check MongoDB disk usage
-docker exec ai-secure-sdlc-db du -sh /data/db
+docker exec secureflow-db du -sh /data/db
 
 ## Archive old scans (move to cold storage)
 db.scans.deleteMany({ createdAt: { $lt: new Date("2023-01-01") } })
@@ -1902,10 +1902,10 @@ mongodb://user:pass@host:27017/db?maxPoolSize=50
 
 ```bash
 ## Check what's using CPU
-docker stats ai-secure-sdlc-backend
+docker stats secureflow-backend
 
 ## Profile with top
-docker exec ai-secure-sdlc-backend top -b -n 1
+docker exec secureflow-backend top -b -n 1
 
 ## Reduce number of parallel AI reviews
 ## Edit webhookController.ts: use sequential instead of parallel
@@ -1915,7 +1915,7 @@ docker exec ai-secure-sdlc-backend top -b -n 1
 
 ```bash
 ## Check memory
-docker stats ai-secure-sdlc-backend
+docker stats secureflow-backend
 
 ## Reduce in-memory cache
 ## Implement garbage collection in code
@@ -1982,15 +1982,15 @@ curl -X POST https://hooks.slack.com/services/YOUR/WEBHOOK/URL \
 
 ```bash
 ## Manual backup
-docker exec ai-secure-sdlc-db mongodump \
+docker exec secureflow-db mongodump \
   --out /backup/$(date +%Y%m%d) \
   -u admin -p admin --authenticationDatabase admin
 
 ## Automated backup (cron)
-0 2 * * * docker exec ai-secure-sdlc-db mongodump --out /backup/$(date +\%Y\%m\%d)
+0 2 * * * docker exec secureflow-db mongodump --out /backup/$(date +\%Y\%m\%d)
 
 ## Restore from backup
-docker exec ai-secure-sdlc-db mongorestore \
+docker exec secureflow-db mongorestore \
   /backup/20240115 \
   -u admin -p admin --authenticationDatabase admin
 ```
@@ -2094,7 +2094,7 @@ docker pull nginx:1.25-alpine
 
 # API Reference
 
-Complete API reference for the AI Secure SDLC platform.
+Complete API reference for the SecureFlow platform.
 
 ### Base URL
 
@@ -2131,7 +2131,7 @@ Check if the backend is running.
 ```json
 {
   "status": "ok",
-  "service": "ai-secure-sdlc-backend"
+  "service": "secureflow-backend"
 }
 ```
 

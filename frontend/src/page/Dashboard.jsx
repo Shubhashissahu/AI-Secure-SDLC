@@ -101,7 +101,7 @@ function Dashboard() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-3xl font-extrabold tracking-tight text-white flex items-center gap-3">
-            <span>🛡️</span> AI Secure SDLC Command Center
+            <span>🛡️</span> SecureFlow Command Center
           </h1>
           <p className="text-xs text-slate-400 mt-1">
             Real-time live multi-scanner intelligence (SAST, SCA, Secrets, Container, IaC, CI/CD) and automated AI triage.

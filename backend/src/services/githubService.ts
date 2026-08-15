@@ -46,7 +46,7 @@ export class GitHubService {
       headers: {
         Authorization: `token ${githubToken}`,
         Accept: "application/vnd.github.v3+json",
-        "User-Agent": "ai-secure-sdlc"
+        "User-Agent": "secureflow"
       }
     });
   }
@@ -89,7 +89,7 @@ export class GitHubService {
       await this.client.post(`/repos/${owner}/${repo}/statuses/${sha}`, {
         state,
         description,
-        context: "ai-secure-sdlc/security-gate",
+        context: "secureflow/security-gate",
         target_url: targetUrl
       });
     } catch (err: unknown) {
@@ -137,7 +137,7 @@ export class GitHubService {
         commit_sha: commitSha,
         ref,
         sarif: zippedBuffer,
-        tool_name: "ai-secure-sdlc"
+        tool_name: "secureflow"
       });
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : String(err);

@@ -22,7 +22,7 @@ export async function checkoutRepo(
     commitSha: string,
     githubToken?: string
 ): Promise<Checkout> {
-    const tempDir = await mkdtemp(path.join(os.tmpdir(), "ai-secure-sdlc-checkout-"));
+    const tempDir = await mkdtemp(path.join(os.tmpdir(), "secureflow-checkout-"));
 
     const cleanup = async () => {
         await rm(tempDir, { recursive: true, force: true }).catch(() => {

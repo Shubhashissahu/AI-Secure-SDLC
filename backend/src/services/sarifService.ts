@@ -125,9 +125,9 @@ export class SarifService {
         {
           tool: {
             driver: {
-              name: "ai-secure-sdlc-platform",
+              name: "secureflow-platform",
               version: "1.0.0",
-              informationUri: "https://github.com/ai-secure-sdlc",
+              informationUri: "https://github.com/secureflow",
               rules
             }
           },

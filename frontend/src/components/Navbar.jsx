@@ -22,10 +22,10 @@ function Navbar() {
         </div>
         <div>
           <span className="font-extrabold text-white tracking-tight text-base block leading-none">
-            AI Secure SDLC
+            SecureFlow
           </span>
           <span className="text-[10px] text-slate-400 font-medium tracking-wide">
-            Automated Pipeline Security
+            Next-Gen AppSec
           </span>
         </div>
       </div>
