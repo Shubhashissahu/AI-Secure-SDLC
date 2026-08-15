@@ -33,7 +33,10 @@ if (process.env.TRUST_PROXY === "true" || process.env.NODE_ENV === "production")
 app.use(helmet());
 app.use(
   cors({
-    origin: process.env.FRONTEND_ORIGIN || "http://localhost:5173",
+    origin: function (origin, callback) {
+      // Dynamically allow any origin for development and easy Vercel testing
+      callback(null, origin || true);
+    },
     credentials: true
   })
 );
