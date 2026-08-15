@@ -1,4 +1,4 @@
-name: AI Secure SDLC Review
+name: SecureFlow Review
 
 on:
   pull_request:
@@ -53,7 +53,7 @@ jobs:
           trivy fs --format json --output trivy-report.json . || true
           echo "Trivy scan completed"
 
-      - name: Trigger AI Secure SDLC webhook
+      - name: Trigger SecureFlow webhook
         id: webhook
         run: |
           RESPONSE=$(curl -s -X POST \

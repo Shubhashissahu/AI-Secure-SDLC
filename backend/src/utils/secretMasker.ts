@@ -1,5 +1,5 @@
 /**
- * Universal Secret Masking Utility for AI Secure SDLC.
+ * Universal Secret Masking Utility for SecureFlow.
  * Ensures secrets are never exposed in UI, logs, reports, or database plaintext.
  */
 

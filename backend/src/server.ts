@@ -57,7 +57,7 @@ app.use(express.json({ limit: "2mb" }));
 
 // ---- Health check ----
 app.get("/health", (_req: Request, res: Response) => {
-  res.status(200).json({ status: "ok", service: "ai-secure-sdlc-backend" });
+  res.status(200).json({ status: "ok", service: "secureflow-backend" });
 });
 
 // ---- API routes ----
@@ -82,7 +82,7 @@ async function start(): Promise<void> {
   await connectDB();
   const server = app.listen(PORT, () => {
     // eslint-disable-next-line no-console
-    console.log(`[server] ai-secure-sdlc backend listening on port ${PORT}`);
+    console.log(`[server] secureflow backend listening on port ${PORT}`);
   });
 
   server.on("error", (err: NodeJS.ErrnoException) => {
