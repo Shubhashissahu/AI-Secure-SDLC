@@ -14,9 +14,10 @@
     --glow-high: 0 0 20px rgba(249, 115, 22, 0.2);
     --glow-medium: 0 0 20px rgba(234, 179, 8, 0.2);
     --glow-low: 0 0 20px rgba(34, 197, 94, 0.2);
-    --glow-sanddune: 0 0 30px rgba(240, 237, 229, 0.15);
-    --glass-bg: rgba(0, 34, 33, 0.6); /* Cyprus 900 */
-    --glass-border: rgba(240, 237, 229, 0.1); /* Sand Dune */
+    --glow-cyan: 0 0 30px rgba(6, 182, 212, 0.15);
+    --glass-bg: rgba(24, 24, 27, 0.6); /* Jet Black */
+    --glass-border: rgba(255, 255, 255, 0.05); /* White highlight */
+    --glass-highlight: inset 0 1px 0 rgba(255, 255, 255, 0.1);
   }
 
   * {
@@ -30,10 +31,12 @@
 
   body {
     @apply bg-slate-950 text-slate-100;
+    background-color: #09090b; /* Deep Obsidian */
     background-image:
-      radial-gradient(ellipse at 15% 0%, rgba(240, 237, 229, 0.05) 0%, transparent 50%),
-      radial-gradient(ellipse at 85% 10%, rgba(240, 237, 229, 0.04) 0%, transparent 45%),
-      radial-gradient(ellipse at 50% 100%, rgba(0, 108, 100, 0.06) 0%, transparent 50%);
+      radial-gradient(ellipse at 15% 0%, rgba(6, 182, 212, 0.08) 0%, transparent 50%), /* Cyan */
+      radial-gradient(ellipse at 85% 10%, rgba(139, 92, 246, 0.06) 0%, transparent 45%), /* Violet */
+      radial-gradient(ellipse at 50% 100%, rgba(34, 211, 238, 0.04) 0%, transparent 60%);
+    background-attachment: fixed;
     min-height: 100vh;
   }
 
@@ -72,27 +75,35 @@
   .card {
     background: var(--glass-bg);
     border: 1px solid var(--glass-border);
-    @apply rounded-xl backdrop-blur-md;
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37), var(--glass-highlight);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    @apply rounded-xl transition-all duration-300;
   }
 
   .card-glow {
     background: var(--glass-bg);
     border: 1px solid var(--glass-border);
-    box-shadow: var(--glow-sanddune);
-    @apply rounded-xl backdrop-blur-md;
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37), var(--glow-cyan), var(--glass-highlight);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    @apply rounded-xl animate-glow-pulse;
   }
 
   /* ── Stat card with hover lift ── */
   .stat-card {
-    background: linear-gradient(135deg, rgba(0, 51, 49, 0.8), rgba(0, 34, 33, 0.9));
-    border: 1px solid rgba(240, 237, 229, 0.08);
-    @apply rounded-xl backdrop-blur-md transition-all duration-300 ease-out;
+    background: linear-gradient(135deg, rgba(24, 24, 27, 0.6), rgba(9, 9, 11, 0.7));
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    box-shadow: 0 4px 16px 0 rgba(0, 0, 0, 0.2), var(--glass-highlight);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    @apply rounded-xl transition-all duration-500 ease-out;
   }
 
   .stat-card:hover {
-    border-color: rgba(240, 237, 229, 0.25);
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3), var(--glow-sanddune);
-    transform: translateY(-2px);
+    border-color: rgba(6, 182, 212, 0.3);
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4), var(--glow-cyan);
+    transform: translateY(-4px) scale(1.02);
   }
 
   /* ── Severity-specific glow cards ── */
@@ -126,12 +137,12 @@
 
   /* ── Buttons ── */
   .btn-primary {
-    @apply bg-blue-600 hover:bg-blue-500 active:bg-blue-700 text-slate-900 font-bold rounded-lg px-4 py-2 text-sm transition-all duration-200;
-    box-shadow: 0 2px 8px rgba(240, 237, 229, 0.25);
+    @apply bg-blue-600 hover:bg-blue-500 active:bg-blue-700 text-white font-bold rounded-lg px-4 py-2 text-sm transition-all duration-200;
+    box-shadow: 0 2px 8px rgba(6, 182, 212, 0.25);
   }
 
   .btn-primary:hover {
-    box-shadow: 0 4px 16px rgba(240, 237, 229, 0.35);
+    box-shadow: 0 4px 16px rgba(6, 182, 212, 0.35);
     transform: translateY(-1px);
   }
 
@@ -145,8 +156,17 @@
 
   /* ── Inputs ── */
   .input-field {
-    @apply w-full bg-slate-900/80 border border-slate-700/60 rounded-lg px-3 py-2 text-sm text-slate-100 placeholder-slate-500 transition-all duration-200;
-    @apply focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50;
+    background: rgba(24, 24, 27, 0.7);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.3);
+    backdrop-filter: blur(8px);
+    @apply w-full rounded-lg px-4 py-2.5 text-sm text-slate-100 placeholder-slate-400 transition-all duration-300;
+  }
+  
+  .input-field:focus {
+    @apply outline-none ring-2 ring-blue-500/50 border-blue-500/50;
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.3), 0 0 15px rgba(6, 182, 212, 0.15);
+    transform: translateY(-1px);
   }
 
   /* ── Animated gradient border ── */
@@ -160,7 +180,7 @@
     inset: 0;
     border-radius: inherit;
     padding: 1px;
-    background: linear-gradient(135deg, rgba(240, 237, 229, 0.4), rgba(0, 108, 100, 0.4), rgba(240, 237, 229, 0.3));
+    background: linear-gradient(135deg, rgba(6, 182, 212, 0.4), rgba(139, 92, 246, 0.4), rgba(34, 211, 238, 0.3));
     -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
     mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
     -webkit-mask-composite: xor;
